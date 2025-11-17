@@ -1,0 +1,10 @@
+.next/
+.env
+node_modules/
+dist/
+build/
+out/
+coverage/
+*.log
+prisma/migrations/
+prisma/generated/
