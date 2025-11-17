@@ -1,4 +1,4 @@
-﻿// Prisma schema for weather-trip-planner
+// Prisma schema for weather-trip-planner
 
 generator client {
   provider = "prisma-client-js"
@@ -10,24 +10,29 @@ datasource db {
 }
 
 model Trip {
-  id             Int              @id @default(autoincrement())
-  name           String
-  origin         String
-  destination    String
-  startDate      DateTime
-  endDate        DateTime
-  notes          String?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  weatherReports WeatherReport[]
+  id                 Int          @id @default(autoincrement())
+  tripName           String
+  inputLocation      String
+  normalizedCity     String?
+  normalizedCountry  String?
+  latitude           Decimal?     @db.Decimal(10, 7)
+  longitude          Decimal?     @db.Decimal(10, 7)
+  startDate          DateTime
+  endDate            DateTime
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  weather            TripWeather?
 }
 
-model WeatherReport {
-  id        Int      @id @default(autoincrement())
-  trip      Trip     @relation(fields: [tripId], references: [id])
-  tripId    Int
-  date      DateTime
-  summary   String?
-  details   Json?
-  createdAt DateTime @default(now())
+model TripWeather {
+  id          Int      @id @default(autoincrement())
+  trip        Trip     @relation(fields: [tripId], references: [id])
+  tripId      Int      @unique
+  weatherJson Json
+  avgTemp     Float?
+  minTemp     Float?
+  maxTemp     Float?
+  summaryText String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
