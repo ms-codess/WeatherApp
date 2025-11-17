@@ -8,3 +8,5 @@ coverage/
 *.log
 prisma/migrations/
 prisma/generated/
+*.db
+*.db-journal

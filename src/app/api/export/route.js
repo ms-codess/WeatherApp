@@ -1,19 +1,45 @@
 import { NextResponse } from 'next/server';
 import prisma from '../../../lib/db';
 
-export async function GET() {
+function toCsv(trips) {
+  const header = [
+    'Trip Name',
+    'Location',
+    'City',
+    'Country',
+    'Start Date',
+    'End Date',
+    'Summary',
+  ];
+  const rows = trips.map((trip) =>
+    [
+      trip.tripName,
+      trip.locationInput,
+      trip.normalizedCity ?? '',
+      trip.normalizedCountry ?? '',
+      trip.startDate.toISOString(),
+      trip.endDate.toISOString(),
+      trip.weather?.summaryText ?? '',
+    ].join(',')
+  );
+  return [header.join(','), ...rows].join('\n');
+}
+
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const format = (searchParams.get('format') || 'csv').toLowerCase();
+
   const trips = await prisma.trip.findMany({
-    include: { weatherReports: true },
+    include: { weather: true },
+    orderBy: { createdAt: 'desc' },
   });
 
-  const csv = ['Trip,Origin,Destination,Start,End'];
-  trips.forEach((trip) => {
-    csv.push(
-      [trip.name, trip.origin, trip.destination, trip.startDate.toISOString(), trip.endDate.toISOString()].join(',')
-    );
-  });
+  if (format === 'json') {
+    return NextResponse.json(trips);
+  }
 
-  return new NextResponse(csv.join('\n'), {
+  const csv = toCsv(trips);
+  return new NextResponse(csv, {
     status: 200,
     headers: {
       'Content-Type': 'text/csv',

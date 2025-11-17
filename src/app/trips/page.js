@@ -82,13 +82,11 @@ export default function TripsPage() {
     if (!confirm('Remove this trip?')) {
       return;
     }
-
     const response = await fetch(`/api/trips/${id}`, { method: 'DELETE' });
     if (!response.ok) {
       alert('Failed to delete trip');
       return;
     }
-
     await fetchTrips();
   }
 
@@ -96,7 +94,7 @@ export default function TripsPage() {
     if (!activeTrip) return null;
     return {
       tripName: activeTrip.tripName || '',
-      locationInput: activeTrip.inputLocation || '',
+      locationInput: activeTrip.locationInput || '',
       startDate: formatDateInput(activeTrip.startDate),
       endDate: formatDateInput(activeTrip.endDate),
     };
@@ -114,11 +112,11 @@ export default function TripsPage() {
         </button>
       </header>
 
-      {loading ? <p>Loading trips…</p> : null}
+      {loading ? <p>Loading trips...</p> : null}
       {error ? <p style={styles.error}>{error}</p> : null}
 
       {!loading && trips.length === 0 ? (
-        <p>No trips yet. Click &quot;New Trip&quot; to create your first plan.</p>
+        <p>No trips yet. Click "New Trip" to create your first plan.</p>
       ) : null}
 
       {!loading && trips.length > 0 ? (
@@ -138,7 +136,7 @@ export default function TripsPage() {
                 <tr key={trip.id}>
                   <td>{trip.tripName}</td>
                   <td>
-                    {trip.normalizedCity ?? '—'}, {trip.normalizedCountry ?? '—'}
+                    {trip.normalizedCity ?? '--'}, {trip.normalizedCountry ?? '--'}
                   </td>
                   <td>{formatDateRange(trip.startDate, trip.endDate)}</td>
                   <td>{trip.weather?.summaryText ?? 'No forecast yet'}</td>
@@ -187,8 +185,8 @@ function formatDateInput(value) {
 }
 
 function formatDateRange(start, end) {
-  const startDate = start ? new Date(start).toLocaleDateString() : '—';
-  const endDate = end ? new Date(end).toLocaleDateString() : '—';
+  const startDate = start ? new Date(start).toLocaleDateString() : '--';
+  const endDate = end ? new Date(end).toLocaleDateString() : '--';
   return `${startDate} → ${endDate}`;
 }
 
