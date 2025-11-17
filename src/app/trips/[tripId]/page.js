@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import TripForm from '../../../components/TripForm';
 import ForecastList from '../../../components/ForecastList';
-import dynamic from 'next/dynamic';
 
 const MapView = dynamic(() => import('../../../components/Map'), { ssr: false });
 
@@ -75,62 +75,63 @@ export default function TripDetailPage({ params }) {
 
   if (error || !trip) {
     return (
-      <div>
+      <div className="content-panel">
         <p>{error || 'Trip not found'}</p>
-        <Link href="/trips">Back to trips</Link>
+        <Link className="pill-link" href="/trips">
+          Back to trips
+        </Link>
       </div>
     );
   }
 
   return (
-    <section style={styles.section}>
-      <header style={styles.header}>
+    <section className="content-panel">
+      <header className="panel-header">
         <div>
-          <p style={styles.eyebrow}>{trip.normalizedCountry ?? 'Unknown'}</p>
+          <p className="eyebrow">{trip.normalizedCountry ?? 'Unknown region'}</p>
           <h1>{trip.tripName}</h1>
           <p>
             {trip.normalizedCity ?? '--'}, {trip.normalizedCountry ?? '--'}
           </p>
-          <p style={styles.dates}>{formatDateRange(trip.startDate, trip.endDate)}</p>
+          <p className="forecast-summary">{formatDateRange(trip.startDate, trip.endDate)}</p>
         </div>
-        <div style={styles.headerActions}>
-          <button onClick={() => setEditing((value) => !value)}>
+        <div className="panel-header__actions">
+          <button className="btn" onClick={() => setEditing((value) => !value)}>
             {editing ? 'Close form' : 'Edit trip'}
           </button>
-          <button onClick={handleDelete}>Delete</button>
-          <Link href="/trips">Back to all trips</Link>
+          <button className="btn" onClick={handleDelete}>
+            Delete
+          </button>
+          <Link className="btn btn--primary" href="/trips">
+            All trips
+          </Link>
         </div>
       </header>
 
-      <div style={styles.layout}>
-        <div style={styles.mapPanel}>
-          <h3>Map</h3>
-          <MapView
-            coordinates={
-              trip.latitude && trip.longitude
-                ? { lat: trip.latitude, lng: trip.longitude }
-                : null
-            }
-          />
-        </div>
-        <div style={styles.weatherPanel}>
-          <h3>Weather summary</h3>
-          <ul style={styles.summaryList}>
-            <li>Avg temp: {formatTemp(trip.weather?.avgTemp)}</li>
-            <li>Low: {formatTemp(trip.weather?.minTemp)}</li>
-            <li>High: {formatTemp(trip.weather?.maxTemp)}</li>
-            <li>Summary: {trip.weather?.summaryText ?? 'No forecast available'}</li>
-          </ul>
-          {forecastItems.length ? (
-            <ForecastList items={forecastItems} />
-          ) : (
-            <p>No detailed forecast captured.</p>
-          )}
-        </div>
+      <div className="panel-section panel-section--map">
+        <MapView
+          coordinates={
+            trip.latitude && trip.longitude
+              ? { lat: trip.latitude, lng: trip.longitude }
+              : null
+          }
+          height="320px"
+        />
       </div>
 
+      <div className="panel-section">
+        <ul className="summary-list">
+          <li>Average temp: {formatTemp(trip.weather?.avgTemp)}</li>
+          <li>Low: {formatTemp(trip.weather?.minTemp)}</li>
+          <li>High: {formatTemp(trip.weather?.maxTemp)}</li>
+          <li>Summary: {trip.weather?.summaryText ?? 'No forecast available'}</li>
+        </ul>
+      </div>
+
+      <ForecastList items={forecastItems} />
+
       {editing ? (
-        <div style={styles.formPanel}>
+        <div className="form-panel">
           <TripForm
             initialValues={{
               tripName: trip.tripName,
@@ -203,63 +204,3 @@ function formatDateRange(start, end) {
   const endDate = end ? new Date(end).toLocaleDateString() : '--';
   return `${startDate} -> ${endDate}`;
 }
-
-const styles = {
-  section: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.5rem',
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    gap: '1rem',
-  },
-  headerActions: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-    alignItems: 'flex-end',
-  },
-  eyebrow: {
-    textTransform: 'uppercase',
-    letterSpacing: '0.1em',
-    color: '#6b7280',
-  },
-  dates: {
-    marginTop: '0.35rem',
-    color: '#4b5563',
-  },
-  layout: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '1.5rem',
-  },
-  mapPanel: {
-    padding: '1rem',
-    borderRadius: '12px',
-    border: '1px solid #e5e7eb',
-  },
-  weatherPanel: {
-    padding: '1rem',
-    borderRadius: '12px',
-    border: '1px solid #e5e7eb',
-    background: '#fff',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-  },
-  summaryList: {
-    listStyle: 'none',
-    padding: 0,
-    margin: 0,
-    display: 'grid',
-    gap: '0.35rem',
-  },
-  formPanel: {
-    padding: '1.5rem',
-    border: '1px solid #e5e7eb',
-    borderRadius: '12px',
-    background: '#fff',
-  },
-};

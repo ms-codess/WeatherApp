@@ -1,19 +1,19 @@
-'use client';
+﻿'use client';
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import SearchBar from '../components/SearchBar';
 import WeatherCard from '../components/WeatherCard';
 import TripForm from '../components/TripForm';
 import ForecastList from '../components/ForecastList';
-import dynamic from 'next/dynamic';
 
 const MapView = dynamic(() => import('../components/Map'), { ssr: false });
 
 function buildForecast(list = []) {
   const days = new Map();
-  list.forEach((entry) => {
-    const date = entry.dt_txt?.split(' ')[0];
+  list?.forEach((entry) => {
+    const date = entry?.dt_txt?.split(' ')[0];
     if (!date) return;
     const existing = days.get(date) ?? {
       temps: [],
@@ -40,10 +40,10 @@ function buildForecast(list = []) {
     }));
 }
 
-function formatCurrent(weather) {
-  if (!weather) return null;
-  const { weather: weatherData, location } = weather;
-  const current = weatherData?.current;
+function formatCurrent(payload) {
+  if (!payload) return null;
+  const { weather, location } = payload;
+  const current = weather?.current;
   return {
     location: location?.label ?? 'Unknown',
     description: current?.weather?.[0]?.description ?? 'n/a',
@@ -76,9 +76,11 @@ export default function HomePage() {
 
   const currentWeather = useMemo(() => formatCurrent(result), [result]);
   const forecastItems = useMemo(
-    () => buildForecast(result?.weather?.forecast?.list),
+    () => buildForecast(result?.weather?.forecast?.list ?? []),
     [result]
   );
+
+  const defaultDates = useMemo(() => suggestedDates(), [result?.location?.label]);
 
   async function lookupWeather(query) {
     setStatus({ loading: true, error: '' });
@@ -90,11 +92,10 @@ export default function HomePage() {
       }
       setResult(data);
       setShowForm(false);
+      setStatus({ loading: false, error: '' });
     } catch (error) {
       setStatus({ loading: false, error: error.message });
-      return;
     }
-    setStatus({ loading: false, error: '' });
   }
 
   async function handleUseLocation() {
@@ -134,107 +135,70 @@ export default function HomePage() {
   }
 
   return (
-    <section style={styles.container}>
-      <div style={styles.hero}>
-        <div>
-          <h1>Weather Trip Planner</h1>
-          <p>
-            Enter a city, postal code, landmark, or coordinates to preview the
-            current weather and a simple five-day forecast before saving the
-            trip.
-          </p>
-        </div>
-        <div>
-          <button
-            style={styles.primaryButton}
-            disabled={!result}
-            onClick={() => setShowForm(true)}
-          >
-            Save as Trip
-          </button>
-          {!result ? (
-            <p style={styles.helperText}>
-              Search for a location to enable trip planning.
-            </p>
-          ) : null}
-        </div>
-      </div>
-
-      <SearchBar onSearch={lookupWeather} onUseCurrentLocation={handleUseLocation} />
-      {status.loading ? <p>Loading weather…</p> : null}
-      {status.error ? <p style={styles.error}>{status.error}</p> : null}
-
-      <div style={styles.grid}>
+    <section className="home-viewport">
+      <div className="map-layer">
         <MapView
           coordinates={
-            result
-              ? { lat: result.location.lat, lng: result.location.lon }
-              : null
+            result ? { lat: result.location.lat, lng: result.location.lon } : null
           }
+          height="100%"
+          showHint={false}
         />
-        <WeatherCard data={currentWeather} />
       </div>
 
-      <ForecastList items={forecastItems} />
-
-      {showForm && result ? (
-        <div style={styles.formPanel}>
-          <h2>Plan this trip</h2>
-          <TripForm
-            initialValues={{
-              tripName: `${result.location.label} getaway`,
-              locationInput: result.location.label,
-              startDate: suggestedDates().start,
-              endDate: suggestedDates().end,
-            }}
-            onSubmit={handleSaveTrip}
-            submitLabel="Save Trip"
-            onCancel={() => setShowForm(false)}
-          />
+      <div className="overlay-panel">
+        <div>
+          <p className="eyebrow">Plan ahead</p>
+          <h2>Navigate weather before you travel</h2>
+          <p className="forecast-summary">
+            Search any destination or use your current location to preview live
+            conditions, a five-day outlook, and save the best dates.
+          </p>
         </div>
-      ) : null}
+
+        <div className="status-badge">
+          {result?.location?.label || 'Awaiting location'}
+        </div>
+
+        <SearchBar onSearch={lookupWeather} onUseCurrentLocation={handleUseLocation} />
+
+        {status.loading ? (
+          <p className="form-error">Fetching fresh weather data...</p>
+        ) : null}
+        {status.error ? <p className="form-error">{status.error}</p> : null}
+
+        {currentWeather ? (
+          <WeatherCard data={currentWeather} />
+        ) : (
+          <div className="panel-section">
+            <p>Start by entering a location to preview weather insights.</p>
+          </div>
+        )}
+
+        <ForecastList items={forecastItems} />
+
+        {result ? (
+          <button className="btn btn--primary" onClick={() => setShowForm((v) => !v)}>
+            {showForm ? 'Close planner' : 'Save as trip'}
+          </button>
+        ) : null}
+
+        {showForm && result ? (
+          <div className="form-panel">
+            <TripForm
+              initialValues={{
+                tripName: `${result.location.label} getaway`,
+                locationInput: result.location.label,
+                startDate: defaultDates.start,
+                endDate: defaultDates.end,
+              }}
+              onSubmit={handleSaveTrip}
+              submitLabel="Save Trip"
+              onCancel={() => setShowForm(false)}
+            />
+          </div>
+        ) : null}
+      </div>
     </section>
   );
 }
-
-const styles = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.5rem',
-  },
-  hero: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    gap: '1rem',
-    alignItems: 'flex-start',
-  },
-  primaryButton: {
-    padding: '0.6rem 1.2rem',
-    borderRadius: '8px',
-    border: 'none',
-    background: '#111a2c',
-    color: '#fff',
-    cursor: 'pointer',
-  },
-  helperText: {
-    marginTop: '0.35rem',
-    color: '#6b7280',
-    fontSize: '0.9rem',
-  },
-  error: {
-    color: '#b91c1c',
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: '2fr 1fr',
-    gap: '1.5rem',
-    alignItems: 'stretch',
-  },
-  formPanel: {
-    padding: '1.5rem',
-    border: '1px solid #e5e7eb',
-    borderRadius: '12px',
-    background: '#fff',
-  },
-};

@@ -23,12 +23,25 @@ function Recenter({ center }) {
   return null;
 }
 
-export default function Map({ coordinates, height = '400px' }) {
+export default function Map({
+  coordinates,
+  height = '400px',
+  className = '',
+  style = {},
+  showHint = true,
+}) {
   const center = coordinates ? [coordinates.lat, coordinates.lng] : [0, 0];
   const hasCoords = Boolean(coordinates);
 
   return (
-    <div style={{ height, width: '100%' }}>
+    <div
+      className={className}
+      style={{
+        height,
+        width: '100%',
+        ...style,
+      }}
+    >
       <MapContainer
         center={center}
         zoom={hasCoords ? 8 : 2}
@@ -39,7 +52,7 @@ export default function Map({ coordinates, height = '400px' }) {
         <Recenter center={center} />
         {hasCoords ? <Marker position={center} icon={defaultIcon} /> : null}
       </MapContainer>
-      {!hasCoords ? (
+      {!hasCoords && showHint ? (
         <p style={{ marginTop: '0.5rem', color: '#6b7280' }}>
           Choose a location to preview the map.
         </p>

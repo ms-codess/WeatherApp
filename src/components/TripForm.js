@@ -49,9 +49,9 @@ export default function TripForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} style={styles.form}>
-      <div style={styles.grid}>
-        <label style={styles.field}>
+    <form onSubmit={handleSubmit} className="trip-form">
+      <div className="trip-form__grid">
+        <label>
           Trip Name
           <input
             type="text"
@@ -62,7 +62,7 @@ export default function TripForm({
           />
         </label>
 
-        <label style={styles.field}>
+        <label>
           Location
           <input
             type="text"
@@ -75,7 +75,7 @@ export default function TripForm({
           />
         </label>
 
-        <label style={styles.field}>
+        <label>
           Start Date
           <input
             type="date"
@@ -86,7 +86,7 @@ export default function TripForm({
           />
         </label>
 
-        <label style={styles.field}>
+        <label>
           End Date
           <input
             type="date"
@@ -99,21 +99,24 @@ export default function TripForm({
       </div>
 
       {errors.length > 0 ? (
-        <div style={styles.errorBox}>
+        <div className="alert alert--error">
           {errors.map((error) => (
-            <p key={error} style={styles.error}>
-              {error}
-            </p>
+            <p key={error}>{error}</p>
           ))}
         </div>
       ) : null}
 
-      <div style={styles.actions}>
-        <button type="submit" disabled={submitting}>
-          {submitting ? 'Saving…' : submitLabel}
+      <div className="trip-form__actions">
+        <button type="submit" className="btn btn--primary" disabled={submitting}>
+          {submitting ? 'Saving...' : submitLabel}
         </button>
         {onCancel ? (
-          <button type="button" onClick={onCancel} disabled={submitting}>
+          <button
+            type="button"
+            className="btn"
+            onClick={onCancel}
+            disabled={submitting}
+          >
             Cancel
           </button>
         ) : null}
@@ -121,35 +124,3 @@ export default function TripForm({
     </form>
   );
 }
-
-const styles = {
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-    gap: '1rem',
-  },
-  field: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.35rem',
-  },
-  actions: {
-    display: 'flex',
-    gap: '0.75rem',
-  },
-  errorBox: {
-    backgroundColor: '#fdecea',
-    border: '1px solid #f5c2c7',
-    borderRadius: '8px',
-    padding: '0.75rem',
-  },
-  error: {
-    margin: 0,
-    color: '#b42318',
-  },
-};

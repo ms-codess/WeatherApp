@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 export default function ForecastList({ items }) {
   if (!items?.length) {
@@ -6,18 +6,20 @@ export default function ForecastList({ items }) {
   }
 
   return (
-    <section style={styles.wrapper}>
-      <h3 style={styles.title}>5-day outlook</h3>
-      <ul style={styles.list}>
+    <section className="panel-section forecast-list">
+      <h3>5-day outlook</h3>
+      <ul>
         {items.map((item) => (
-          <li key={item.date} style={styles.item}>
+          <li key={item.date} className="forecast-item">
             <div>
-              <p style={styles.day}>{item.label}</p>
-              <p style={styles.summary}>{item.summary}</p>
+              <p className="forecast-day">{item.label}</p>
+              <p className="forecast-summary">{item.summary}</p>
             </div>
-            <p style={styles.temp}>
+            <p>
               <strong>{Math.round(item.high)}°C</strong>
-              <span>{Math.round(item.low)}°C</span>
+              <span style={{ marginLeft: '0.35rem', color: '#94a3b8' }}>
+                {Math.round(item.low)}°C
+              </span>
             </p>
           </li>
         ))}
@@ -25,41 +27,3 @@ export default function ForecastList({ items }) {
     </section>
   );
 }
-
-const styles = {
-  wrapper: {
-    border: '1px solid #e5e7eb',
-    borderRadius: '12px',
-    padding: '1rem',
-    background: '#fff',
-  },
-  title: {
-    marginTop: 0,
-  },
-  list: {
-    listStyle: 'none',
-    padding: 0,
-    margin: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem',
-  },
-  item: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  day: {
-    margin: 0,
-    fontWeight: 600,
-  },
-  summary: {
-    margin: 0,
-    color: '#6b7280',
-  },
-  temp: {
-    display: 'flex',
-    gap: '0.5rem',
-    alignItems: 'baseline',
-  },
-};
