@@ -3,9 +3,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import Map from '../../../components/Map';
 import TripForm from '../../../components/TripForm';
 import ForecastList from '../../../components/ForecastList';
+import dynamic from 'next/dynamic';
+
+const MapView = dynamic(() => import('../../../components/Map'), { ssr: false });
 
 export default function TripDetailPage({ params }) {
   const router = useRouter();
@@ -103,7 +105,7 @@ export default function TripDetailPage({ params }) {
       <div style={styles.layout}>
         <div style={styles.mapPanel}>
           <h3>Map</h3>
-          <Map
+          <MapView
             coordinates={
               trip.latitude && trip.longitude
                 ? { lat: trip.latitude, lng: trip.longitude }

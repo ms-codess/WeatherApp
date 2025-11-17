@@ -3,10 +3,12 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import SearchBar from '../components/SearchBar';
-import Map from '../components/Map';
 import WeatherCard from '../components/WeatherCard';
 import TripForm from '../components/TripForm';
 import ForecastList from '../components/ForecastList';
+import dynamic from 'next/dynamic';
+
+const MapView = dynamic(() => import('../components/Map'), { ssr: false });
 
 function buildForecast(list = []) {
   const days = new Map();
@@ -163,7 +165,7 @@ export default function HomePage() {
       {status.error ? <p style={styles.error}>{status.error}</p> : null}
 
       <div style={styles.grid}>
-        <Map
+        <MapView
           coordinates={
             result
               ? { lat: result.location.lat, lng: result.location.lon }
