@@ -1,6 +1,11 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
+
+const THEMES = {
+  dark: { label: 'Dark mode', emoji: '🌙' },
+  light: { label: 'Light mode', emoji: '☀️' },
+};
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState('dark');
@@ -17,13 +22,16 @@ export default function ThemeToggle() {
     }
   }, []);
 
+  const nextTheme = theme === 'dark' ? 'light' : 'dark';
+
   return (
     <button
-      className="btn pill-link"
+      className="btn btn--icon"
       type="button"
-      onClick={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))}
+      title={`Switch to ${THEMES[nextTheme].label}`}
+      onClick={() => setTheme(nextTheme)}
     >
-      {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+      {THEMES[theme].emoji}
     </button>
   );
 }

@@ -21,7 +21,6 @@ export default function RootLayout({ children }) {
             <div className="top-nav__left">
               <div className="top-nav__brand">
                 <strong>Weather Trip Planner</strong>
-                <span className="top-nav__tagline">Forecast-aware itineraries</span>
               </div>
               <nav className="top-nav__menu">
                 {navigation.map((link) => (
@@ -33,9 +32,6 @@ export default function RootLayout({ children }) {
             </div>
             <div className="top-nav__actions">
               <ThemeToggle />
-              <a className="btn pill-link" href="/trips">
-                Trips
-              </a>
               <a className="btn btn--primary" href="/">
                 New Search
               </a>
