@@ -151,13 +151,7 @@ export default function HomePage() {
         ) : null}
         {status.error ? <p className="form-error">{status.error}</p> : null}
 
-        {currentWeather ? (
-          <WeatherCard data={currentWeather} />
-        ) : (
-          <div className="panel-section">
-            <p>Start by entering a location to preview weather insights.</p>
-          </div>
-        )}
+        {currentWeather ? <WeatherCard data={currentWeather} /> : null}
 
         <ForecastList items={forecastItems} />
 
