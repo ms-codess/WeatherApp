@@ -99,6 +99,7 @@ a {
 .map-layer {
   position: absolute;
   inset: 0;
+  z-index: 1;
 }
 
 .map-layer > div {
