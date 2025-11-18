@@ -111,9 +111,14 @@ export default function HomePage() {
         lookupWeather(coords);
       },
       (error) => {
+        let message = error.message || 'Unable to access your location.';
+        if (error.code === error.PERMISSION_DENIED) {
+          message =
+            'Location access was blocked. Enable permissions or tap on the map.';
+        }
         setStatus({
           loading: false,
-          error: error.message || 'Unable to access your location.',
+          error: message,
         });
       }
     );
