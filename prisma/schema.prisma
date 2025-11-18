@@ -5,30 +5,30 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
 model Trip {
-  id                 Int          @id @default(autoincrement())
-  tripName           String
-  inputLocation      String
-  normalizedCity     String?
-  normalizedCountry  String?
-  latitude           Decimal?     @db.Decimal(10, 7)
-  longitude          Decimal?     @db.Decimal(10, 7)
-  startDate          DateTime
-  endDate            DateTime
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
-  weather            TripWeather?
+  id                Int          @id @default(autoincrement())
+  tripName          String
+  locationInput     String
+  normalizedCity    String?
+  normalizedCountry String?
+  latitude          Float?
+  longitude         Float?
+  startDate         DateTime
+  endDate           DateTime
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  weather           TripWeather?
 }
 
 model TripWeather {
   id          Int      @id @default(autoincrement())
   trip        Trip     @relation(fields: [tripId], references: [id])
   tripId      Int      @unique
-  weatherJson Json
+  weatherJson String
   avgTemp     Float?
   minTemp     Float?
   maxTemp     Float?
