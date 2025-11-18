@@ -98,32 +98,6 @@ export default function HomePage() {
     }
   }
 
-  async function handleUseLocation() {
-    if (!navigator.geolocation) {
-      setStatus({ loading: false, error: 'Geolocation is not supported.' });
-      return;
-    }
-
-    setStatus({ loading: true, error: '' });
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const coords = `${position.coords.latitude},${position.coords.longitude}`;
-        lookupWeather(coords);
-      },
-      (error) => {
-        let message = error.message || 'Unable to access your location.';
-        if (error.code === error.PERMISSION_DENIED) {
-          message =
-            'Location access was blocked. Enable permissions or tap on the map.';
-        }
-        setStatus({
-          loading: false,
-          error: message,
-        });
-      }
-    );
-  }
-
   async function handleSaveTrip(formValues) {
     const response = await fetch('/api/trips', {
       method: 'POST',
@@ -161,8 +135,8 @@ export default function HomePage() {
           <p className="eyebrow">Plan ahead</p>
           <h2>Navigate weather before you travel</h2>
           <p className="forecast-summary">
-            Search any destination or use your current location to preview live
-            conditions, a five-day outlook, and save the best dates.
+            Search any destination or tap on the map to preview live conditions, a
+            five-day outlook, and save the best dates.
           </p>
         </div>
 
@@ -170,7 +144,7 @@ export default function HomePage() {
           {result?.location?.label || 'Awaiting location'}
         </div>
 
-        <SearchBar onSearch={lookupWeather} onUseCurrentLocation={handleUseLocation} />
+        <SearchBar onSearch={lookupWeather} />
 
         {status.loading ? (
           <p className="form-error">Fetching fresh weather data...</p>

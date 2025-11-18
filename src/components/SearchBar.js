@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export default function SearchBar({ onSearch, onUseCurrentLocation }) {
+export default function SearchBar({ onSearch }) {
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
 
@@ -14,11 +14,6 @@ export default function SearchBar({ onSearch, onUseCurrentLocation }) {
     }
     setError('');
     onSearch?.(query.trim());
-  }
-
-  function handleUseLocation() {
-    setError('');
-    onUseCurrentLocation?.();
   }
 
   return (
@@ -34,13 +29,6 @@ export default function SearchBar({ onSearch, onUseCurrentLocation }) {
         />
         <button type="submit" className="search-bar__btn search-bar__btn--primary">
           Search
-        </button>
-        <button
-          type="button"
-          onClick={handleUseLocation}
-          className="search-bar__btn"
-        >
-          Use my location
         </button>
       </div>
       {error ? (
