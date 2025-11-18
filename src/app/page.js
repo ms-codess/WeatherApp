@@ -153,14 +153,19 @@ export default function HomePage() {
         ) : null}
         {status.error ? <p className="form-error">{status.error}</p> : null}
 
-        {currentWeather ? <WeatherCard data={currentWeather} /> : null}
-
-        <ForecastList items={forecastItems} />
+        {currentWeather ? (
+          <div className="overlay-grid">
+            <WeatherCard data={currentWeather} />
+            <ForecastList items={forecastItems} />
+          </div>
+        ) : null}
 
         {result ? (
-          <button className="btn btn--primary" onClick={() => setShowForm((v) => !v)}>
-            {showForm ? 'Close planner' : 'Save as trip'}
-          </button>
+          <div className="overlay-actions">
+            <button className="btn btn--primary" onClick={() => setShowForm((v) => !v)}>
+              {showForm ? 'Close planner' : 'Save as trip'}
+            </button>
+          </div>
         ) : null}
 
         {showForm && result ? (
