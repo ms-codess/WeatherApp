@@ -1,6 +1,6 @@
 'use client';
 
-import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect } from 'react';
@@ -29,6 +29,7 @@ export default function Map({
   className = '',
   style = {},
   showHint = true,
+  onSelectLocation,
 }) {
   const center = coordinates ? [coordinates.lat, coordinates.lng] : [0, 0];
   const hasCoords = Boolean(coordinates);
@@ -39,6 +40,7 @@ export default function Map({
       style={{
         height,
         width: '100%',
+        position: 'relative',
         ...style,
       }}
     >
@@ -51,12 +53,27 @@ export default function Map({
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <Recenter center={center} />
         {hasCoords ? <Marker position={center} icon={defaultIcon} /> : null}
+        {onSelectLocation ? (
+          <ClickHandler onSelectLocation={onSelectLocation} />
+        ) : null}
       </MapContainer>
-      {!hasCoords && showHint ? (
-        <p style={{ marginTop: '0.5rem', color: '#6b7280' }}>
-          Choose a location to preview the map.
-        </p>
+      {showHint ? (
+        <div className="map-hint">
+          <span>Search or tap anywhere to preview weather</span>
+        </div>
       ) : null}
     </div>
   );
+}
+
+function ClickHandler({ onSelectLocation }) {
+  useMapEvents({
+    click(event) {
+      onSelectLocation?.({
+        lat: event.latlng.lat,
+        lng: event.latlng.lng,
+      });
+    },
+  });
+  return null;
 }

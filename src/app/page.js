@@ -134,6 +134,11 @@ export default function HomePage() {
     return { success: true, reset: true };
   }
 
+  function handleMapSelect({ lat, lng }) {
+    const coords = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+    lookupWeather(coords);
+  }
+
   return (
     <section className="home-viewport">
       <div className="map-layer">
@@ -142,7 +147,7 @@ export default function HomePage() {
             result ? { lat: result.location.lat, lng: result.location.lon } : null
           }
           height="100%"
-          showHint={false}
+          onSelectLocation={handleMapSelect}
         />
       </div>
 

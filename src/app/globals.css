@@ -198,6 +198,19 @@ a {
   border-radius: 20px;
 }
 
+.map-hint {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(2, 6, 23, 0.7);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.8rem;
+  pointer-events: none;
+}
+
 .weather-card {
   display: flex;
   flex-direction: column;

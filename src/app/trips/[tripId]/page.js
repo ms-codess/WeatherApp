@@ -116,6 +116,7 @@ export default function TripDetailPage({ params }) {
               : null
           }
           height="320px"
+          showHint={false}
         />
       </div>
 
