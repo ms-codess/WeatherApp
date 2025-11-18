@@ -131,19 +131,13 @@ export default function HomePage() {
       </div>
 
       <div className="overlay-panel">
-        <div className="overlay-header">
-          <div className="overlay-tagline">
-            <p className="eyebrow">Plan ahead</p>
-            <h2>Navigate weather before you travel</h2>
-            <p className="forecast-summary">
-              Search any destination or tap on the map to preview live conditions, a
-              five-day outlook, and save the best dates.
-            </p>
-          </div>
-          <div className="overlay-location">
-            <span className="overlay-location__label">Location</span>
-            <strong>{result?.location?.label || 'Tap the map to begin'}</strong>
-          </div>
+        <div className="overlay-tagline">
+          <p className="eyebrow">Plan ahead</p>
+          <h2>Navigate weather before you travel</h2>
+          <p className="forecast-summary">
+            Search any destination or tap on the map to preview live conditions, a
+            five-day outlook, and save the best dates.
+          </p>
         </div>
 
         <SearchBar onSearch={lookupWeather} />
