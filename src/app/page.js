@@ -7,6 +7,9 @@ import SearchBar from '../components/SearchBar';
 import WeatherCard from '../components/WeatherCard';
 import TripForm from '../components/TripForm';
 import ForecastList from '../components/ForecastList';
+import LocationDetails from '../components/LocationDetails';
+import ItineraryPreview from '../components/ItineraryPreview';
+import TravelVideos from '../components/TravelVideos';
 
 const MapView = dynamic(() => import('../components/Map'), { ssr: false });
 
@@ -151,6 +154,9 @@ export default function HomePage() {
           <div className="overlay-grid">
             <WeatherCard data={currentWeather} />
             <ForecastList items={forecastItems} />
+            <LocationDetails location={result?.location} />
+            <ItineraryPreview startDate={defaultDates.start} endDate={defaultDates.end} />
+            <TravelVideos locationLabel={result?.location?.label} />
           </div>
         ) : null}
 
