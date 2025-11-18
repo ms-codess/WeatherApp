@@ -1,5 +1,7 @@
 ﻿'use client';
 
+import { emojiForDescription } from '../lib/weatherEmojis';
+
 export default function ForecastList({ items }) {
   if (!items?.length) {
     return null;
@@ -12,7 +14,12 @@ export default function ForecastList({ items }) {
         {items.map((item) => (
           <li key={item.date} className="forecast-item">
             <div>
-              <p className="forecast-day">{item.label}</p>
+              <p className="forecast-day">
+                <span role="img" aria-label="conditions">
+                  {emojiForDescription(item.summary)}
+                </span>{' '}
+                {item.label}
+              </p>
               <p className="forecast-summary">{item.summary}</p>
             </div>
             <p>

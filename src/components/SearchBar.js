@@ -1,10 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { classifyInput, getInterpretationLabel } from '../lib/inputParser';
 
-export default function SearchBar({ onSearch }) {
+export default function SearchBar({
+  onSearch,
+  onInterpretationChange,
+  onUseLocation,
+}) {
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
+  const [interpretation, setInterpretation] = useState(null);
+
+  useEffect(() => {
+    const result = classifyInput(query);
+    setInterpretation(result);
+    onInterpretationChange?.(result);
+  }, [query, onInterpretationChange]);
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -14,6 +26,10 @@ export default function SearchBar({ onSearch }) {
     }
     setError('');
     onSearch?.(query.trim());
+  }
+
+  function handleUseLocation() {
+    onUseLocation?.();
   }
 
   return (
@@ -30,7 +46,17 @@ export default function SearchBar({ onSearch }) {
         <button type="submit" className="search-bar__btn search-bar__btn--primary">
           Search
         </button>
+        <button
+          type="button"
+          className="search-bar__btn"
+          onClick={handleUseLocation}
+        >
+          Use my location
+        </button>
       </div>
+      {interpretation ? (
+        <p className="search-hint">{getInterpretationLabel(interpretation)}</p>
+      ) : null}
       {error ? (
         <p className="form-error" role="status">
           {error}

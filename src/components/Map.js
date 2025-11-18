@@ -1,6 +1,6 @@
 'use client';
 
-import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect } from 'react';
@@ -34,6 +34,7 @@ export default function Map({
   style = {},
   showHint = true,
   onSelectLocation,
+  popupData,
 }) {
   const center = coordinates ? [coordinates.lat, coordinates.lng] : DEFAULT_CENTER;
   const hasCoords = Boolean(coordinates);
@@ -57,7 +58,31 @@ export default function Map({
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <Recenter center={center} />
-        {hasCoords ? <Marker position={center} icon={defaultIcon} /> : null}
+        {hasCoords ? (
+          <Marker position={center} icon={defaultIcon}>
+            {popupData ? (
+              <Popup>
+                <div className="map-popup">
+                  <strong>{popupData.title}</strong>
+                  <p>{popupData.description}</p>
+                  <p>{popupData.temperature}°C</p>
+                  {popupData.forecast?.length ? (
+                    <ul>
+                      {popupData.forecast.map((item) => (
+                        <li key={item.date}>
+                          <span>{item.label}</span> ·{' '}
+                          <strong>
+                            {Math.round(item.high)}° / {Math.round(item.low)}°
+                          </strong>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              </Popup>
+            ) : null}
+          </Marker>
+        ) : null}
         {onSelectLocation ? (
           <ClickHandler onSelectLocation={onSelectLocation} />
         ) : null}

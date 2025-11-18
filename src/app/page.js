@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import SearchBar from '../components/SearchBar';
@@ -76,6 +76,8 @@ export default function HomePage() {
   const [status, setStatus] = useState({ loading: false, error: '' });
   const [result, setResult] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [interpretation, setInterpretation] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
 
   const currentWeather = useMemo(() => formatCurrent(result), [result]);
   const forecastItems = useMemo(
@@ -84,6 +86,21 @@ export default function HomePage() {
   );
 
   const defaultDates = useMemo(() => suggestedDates(), [result?.location?.label]);
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+      },
+      () => {
+        // ignore errors; user can trigger manually
+      },
+      { enableHighAccuracy: true, timeout: 5000 }
+    );
+  }, []);
 
   async function lookupWeather(query) {
     setStatus({ loading: true, error: '' });
@@ -121,15 +138,63 @@ export default function HomePage() {
     lookupWeather(coords);
   }
 
+  function handleUseLocation() {
+    if (!navigator.geolocation) {
+      setStatus({ loading: false, error: 'Geolocation is not supported.' });
+      return;
+    }
+    setStatus({ loading: true, error: '' });
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setStatus({ loading: false, error: '' });
+        const coords = `${position.coords.latitude},${position.coords.longitude}`;
+        lookupWeather(coords);
+      },
+      (error) => {
+        setStatus({
+          loading: false,
+          error:
+            error.code === error.PERMISSION_DENIED
+              ? 'Location permission denied. Tap the map or type a place.'
+              : error.message || 'Unable to access your location.',
+        });
+      }
+    );
+  }
+
+  const activeLocation =
+    result?.location ||
+    (userLocation
+      ? {
+          lat: userLocation.lat,
+          lon: userLocation.lon,
+          label: 'Your location',
+          city: 'Current position',
+          country: '',
+        }
+      : null);
+
+  const mapCoordinates = activeLocation
+    ? { lat: activeLocation.lat, lng: activeLocation.lon }
+    : null;
+
+  const popupSummary = currentWeather
+    ? {
+        title: currentWeather.location,
+        description: currentWeather.description,
+        temperature: Math.round(currentWeather.temperature),
+        forecast: forecastItems.slice(0, 5),
+      }
+    : null;
+
   return (
     <section className="home-viewport">
       <div className="map-layer">
         <MapView
-          coordinates={
-            result ? { lat: result.location.lat, lng: result.location.lon } : null
-          }
+          coordinates={mapCoordinates}
           height="100%"
           onSelectLocation={handleMapSelect}
+          popupData={popupSummary}
         />
       </div>
 
@@ -143,7 +208,17 @@ export default function HomePage() {
           </p>
         </div>
 
-        <SearchBar onSearch={lookupWeather} />
+        {interpretation ? (
+          <div className="status-badge">
+            {interpretation.label}
+          </div>
+        ) : null}
+
+        <SearchBar
+          onSearch={lookupWeather}
+          onUseLocation={handleUseLocation}
+          onInterpretationChange={setInterpretation}
+        />
 
         {status.loading ? (
           <p className="form-error">Fetching fresh weather data...</p>
@@ -155,7 +230,11 @@ export default function HomePage() {
             <WeatherCard data={currentWeather} />
             <ForecastList items={forecastItems} />
             <LocationDetails location={result?.location} />
-            <ItineraryPreview startDate={defaultDates.start} endDate={defaultDates.end} />
+            <ItineraryPreview
+              locationLabel={result?.location?.label}
+              startDate={defaultDates.start}
+              endDate={defaultDates.end}
+            />
             <TravelVideos locationLabel={result?.location?.label} />
           </div>
         ) : null}

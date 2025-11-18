@@ -3,6 +3,9 @@ const BASE_URL =
 
 const API_KEY = process.env.OPENWEATHER_API_KEY;
 
+const ZIP_REGEX = /^\d{5}(?:[-\s]\d{4})?$/;
+const POSTAL_REGEX = /^[A-Z]\d[A-Z]\s?\d[A-Z]\d$/i;
+
 function requireKey() {
   if (!API_KEY) {
     throw new Error(
@@ -39,10 +42,15 @@ export async function geocodeLocation(search) {
   if (coords) {
     return {
       ...coords,
-      city: 'Unknown city',
-      country: 'Unknown country',
-      label: `${coords.lat}, ${coords.lon}`,
+      city: 'Coordinates',
+      country: '',
+      label: `${coords.lat.toFixed(4)}, ${coords.lon.toFixed(4)}`,
+      interpretedAs: 'Coordinates',
     };
+  }
+
+  if (ZIP_REGEX.test(search) || POSTAL_REGEX.test(search)) {
+    return lookupByZip(search);
   }
 
   const url = new URL('/geo/1.0/direct', BASE_URL);
@@ -66,6 +74,29 @@ export async function geocodeLocation(search) {
     city: first.name,
     country: first.country,
     label: `${first.name}, ${first.country}`,
+    interpretedAs: /tower|park|museum|bridge|statue/i.test(search)
+      ? 'Landmark'
+      : 'City/Town',
+  };
+}
+
+async function lookupByZip(zip) {
+  const url = new URL('/geo/1.0/zip', BASE_URL);
+  url.searchParams.set('zip', zip);
+  url.searchParams.set('appid', API_KEY);
+
+  const result = await fetchJson(
+    url.toString(),
+    'Postal/ZIP lookup failed.'
+  );
+
+  return {
+    lat: result.lat,
+    lon: result.lon,
+    city: result.name,
+    country: result.country,
+    label: `${zip.toUpperCase()} (${result.name}, ${result.country})`,
+    interpretedAs: 'Postal code',
   };
 }
 

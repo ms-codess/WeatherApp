@@ -1,9 +1,10 @@
-'use client';
+﻿'use client';
 
 export default function LocationDetails({ location }) {
   if (!location) return null;
 
   const details = [
+    { label: 'Type', value: location.interpretedAs || 'City / Town' },
     { label: 'City', value: location.city || location.label },
     { label: 'Country', value: location.country || '—' },
     {
