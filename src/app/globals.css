@@ -123,6 +123,39 @@ a {
   gap: 1.25rem;
 }
 
+.overlay-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+
+.overlay-tagline h2 {
+  margin: 0.2rem 0;
+}
+
+.overlay-location {
+  padding: 0.85rem 1rem;
+  border-radius: 20px;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  min-width: 160px;
+}
+
+.overlay-location__label {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.overlay-location strong {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.95rem;
+}
+
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.3em;
