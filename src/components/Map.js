@@ -5,9 +5,10 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect } from 'react';
 
-const DEFAULT_CENTER = [20, 0];
-const DEFAULT_ZOOM = 2.3;
-const FOCUSED_ZOOM = 8;
+const DEFAULT_CENTER = [37.0902, -95.7129];
+const DEFAULT_ZOOM = 3.2;
+const USER_ZOOM = 4.5;
+const FOCUSED_ZOOM = 8.5;
 
 const defaultIcon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -35,9 +36,15 @@ export default function Map({
   showHint = true,
   onSelectLocation,
   popupData,
+  focusMode = 'search',
 }) {
   const center = coordinates ? [coordinates.lat, coordinates.lng] : DEFAULT_CENTER;
   const hasCoords = Boolean(coordinates);
+  const zoom = hasCoords
+    ? focusMode === 'user'
+      ? USER_ZOOM
+      : FOCUSED_ZOOM
+    : DEFAULT_ZOOM;
 
   return (
     <div
@@ -50,9 +57,9 @@ export default function Map({
       }}
     >
       <MapContainer
-        key={hasCoords ? `${center[0]}-${center[1]}` : 'default-map'}
+        key={hasCoords ? `${center[0]}-${center[1]}-${focusMode}` : 'default-map'}
         center={center}
-        zoom={hasCoords ? FOCUSED_ZOOM : DEFAULT_ZOOM}
+        zoom={zoom}
         style={{ height: '100%', width: '100%', borderRadius: '12px' }}
         scrollWheelZoom
       >

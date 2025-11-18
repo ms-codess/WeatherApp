@@ -177,6 +177,11 @@ export default function HomePage() {
   const mapCoordinates = activeLocation
     ? { lat: activeLocation.lat, lng: activeLocation.lon }
     : null;
+  const mapFocusMode = result
+    ? 'search'
+    : activeLocation
+    ? 'user'
+    : 'default';
 
   const popupSummary = currentWeather
     ? {
@@ -195,6 +200,7 @@ export default function HomePage() {
           height="100%"
           onSelectLocation={handleMapSelect}
           popupData={popupSummary}
+          focusMode={mapFocusMode}
         />
       </div>
 
@@ -210,7 +216,7 @@ export default function HomePage() {
 
         {interpretation ? (
           <div className="status-badge">
-            {interpretation.label}
+            Interpreted as {interpretation.label}
           </div>
         ) : null}
 

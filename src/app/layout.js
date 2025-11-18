@@ -1,32 +1,49 @@
-﻿import './globals.css';
+﻿import './globals.css'
+import ThemeToggle from '../components/ThemeToggle'
 
 export const metadata = {
   title: 'Weather Trip Planner',
   description: 'Plan trips with live weather insights.',
-};
+}
+
+const navigation = [
+  { label: 'Home', href: '/' },
+  { label: 'Trips', href: '/trips' },
+  { label: 'Favorites', href: '/trips#favorites' },
+]
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="dark">
       <body>
         <div className="app-shell">
           <header className="top-nav">
-            <div className="top-nav__brand">
-              <strong>Weather Trip Planner</strong>
-              <span>Forecast-aware itineraries</span>
+            <div className="top-nav__left">
+              <div className="top-nav__brand">
+                <strong>Weather Trip Planner</strong>
+                <span className="top-nav__tagline">Forecast-aware itineraries</span>
+              </div>
+              <nav className="top-nav__menu">
+                {navigation.map((link) => (
+                  <a key={link.label} href={link.href}>
+                    {link.label}
+                  </a>
+                ))}
+              </nav>
             </div>
-            <nav className="top-nav__actions">
+            <div className="top-nav__actions">
+              <ThemeToggle />
               <a className="btn pill-link" href="/trips">
                 Trips
               </a>
               <a className="btn btn--primary" href="/">
                 New Search
               </a>
-            </nav>
+            </div>
           </header>
           <main>{children}</main>
         </div>
       </body>
     </html>
-  );
+  )
 }
