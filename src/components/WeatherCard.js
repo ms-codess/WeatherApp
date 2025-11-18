@@ -1,5 +1,21 @@
 ﻿'use client';
 
+const weatherEmojis = [
+  { match: /thunder|storm|lightning/i, icon: '⛈️' },
+  { match: /snow|sleet/i, icon: '❄️' },
+  { match: /hail/i, icon: '🌨️' },
+  { match: /rain|shower|drizzle/i, icon: '🌧️' },
+  { match: /mist|fog/i, icon: '🌫️' },
+  { match: /cloud/i, icon: '☁️' },
+  { match: /sun|clear/i, icon: '☀️' },
+];
+
+function getEmoji(description) {
+  if (!description) return '🌤️';
+  const entry = weatherEmojis.find((emoji) => emoji.match.test(description));
+  return entry?.icon || '🌤️';
+}
+
 export default function WeatherCard({ data }) {
   if (!data) {
     return (
@@ -9,13 +25,20 @@ export default function WeatherCard({ data }) {
     );
   }
 
+  const emoji = getEmoji(data.description);
+
   return (
     <div className="panel-section weather-card">
       <div className="weather-card__header">
         <div>
           <p className="eyebrow">Current weather</p>
           <h3>{data.location}</h3>
-          <p className="weather-card__summary">{data.description}</p>
+          <p className="weather-card__summary">
+            <span role="img" aria-label="conditions">
+              {emoji}
+            </span>{' '}
+            {data.description}
+          </p>
         </div>
         <div className="weather-card__temperature">
           {data.icon ? (
