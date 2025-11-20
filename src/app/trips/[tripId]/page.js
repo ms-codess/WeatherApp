@@ -6,6 +6,9 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import TripForm from '../../../components/TripForm';
 import ForecastList from '../../../components/ForecastList';
+import ItineraryPreview from '../../../components/ItineraryPreview';
+import TravelVideos from '../../../components/TravelVideos';
+import HotelSuggestions from '../../../components/HotelSuggestions';
 
 const MapView = dynamic(() => import('../../../components/Map'), { ssr: false });
 
@@ -17,6 +20,7 @@ export default function TripDetailPage({ params }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editing, setEditing] = useState(false);
+  const [exportFormat, setExportFormat] = useState('csv');
 
   useEffect(() => {
     async function loadTrip() {
@@ -84,6 +88,11 @@ export default function TripDetailPage({ params }) {
     );
   }
 
+  const locationLabel =
+    trip.normalizedCity && trip.normalizedCountry
+      ? `${trip.normalizedCity}, ${trip.normalizedCountry}`
+      : trip.normalizedCity || trip.locationInput || trip.tripName;
+
   return (
     <section className="content-panel">
       <header className="panel-header">
@@ -96,6 +105,32 @@ export default function TripDetailPage({ params }) {
           <p className="forecast-summary">{formatDateRange(trip.startDate, trip.endDate)}</p>
         </div>
         <div className="panel-header__actions">
+          <div className="export-controls">
+            <label className="sr-only" htmlFor="trip-export-format">
+              Choose export format
+            </label>
+            <select
+              id="trip-export-format"
+              className="export-select"
+              value={exportFormat}
+              onChange={(event) => setExportFormat(event.target.value)}
+            >
+              <option value="csv">CSV</option>
+              <option value="json">JSON</option>
+              <option value="xml">XML</option>
+              <option value="markdown">Markdown</option>
+              <option value="pdf">PDF</option>
+            </select>
+            <button
+              className="btn"
+              type="button"
+              onClick={() =>
+                window.open(`/api/export?tripId=${tripId}&format=${exportFormat}`, '_blank')
+              }
+            >
+              Export
+            </button>
+          </div>
           <button className="btn" onClick={() => setEditing((value) => !value)}>
             {editing ? 'Close form' : 'Edit trip'}
           </button>
@@ -116,6 +151,7 @@ export default function TripDetailPage({ params }) {
               : null
           }
           height="320px"
+          showHint={false}
         />
       </div>
 
@@ -124,11 +160,29 @@ export default function TripDetailPage({ params }) {
           <li>Average temp: {formatTemp(trip.weather?.avgTemp)}</li>
           <li>Low: {formatTemp(trip.weather?.minTemp)}</li>
           <li>High: {formatTemp(trip.weather?.maxTemp)}</li>
-          <li>Summary: {trip.weather?.summaryText ?? 'No forecast available'}</li>
+          <li>Summary: {formatSummaryText(trip.weather?.summaryText)}</li>
         </ul>
       </div>
 
       <ForecastList items={forecastItems} />
+
+      <div className="panel-section panel-section--grid">
+        <ItineraryPreview
+          locationLabel={locationLabel}
+          startDate={formatDateInput(trip.startDate)}
+          endDate={formatDateInput(trip.endDate)}
+        />
+        <TravelVideos
+          locationLabel={locationLabel}
+          startDate={formatDateInput(trip.startDate)}
+          endDate={formatDateInput(trip.endDate)}
+        />
+        <HotelSuggestions
+          locationLabel={locationLabel}
+          startDate={formatDateInput(trip.startDate)}
+          endDate={formatDateInput(trip.endDate)}
+        />
+      </div>
 
       {editing ? (
         <div className="form-panel">
@@ -203,4 +257,9 @@ function formatDateRange(start, end) {
   const startDate = start ? new Date(start).toLocaleDateString() : '--';
   const endDate = end ? new Date(end).toLocaleDateString() : '--';
   return `${startDate} -> ${endDate}`;
+}
+
+function formatSummaryText(value) {
+  if (!value) return 'No forecast available';
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }

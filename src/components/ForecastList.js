@@ -1,25 +1,39 @@
-﻿'use client';
+'use client';
 
-export default function ForecastList({ items }) {
-  if (!items?.length) {
-    return null;
+import { emojiForDescription } from '../lib/weatherEmojis';
+
+export default function ForecastList({ items, rangeLabel }) {
+  if (!items || !items.length) {
+    return (
+      <section className="panel-section forecast-list">
+        <h3>Forecast preview</h3>
+        <p className="search-hint">
+          Select a destination and date range to view a tailored outlook.
+        </p>
+      </section>
+    );
   }
 
   return (
     <section className="panel-section forecast-list">
-      <h3>5-day outlook</h3>
+      <div className="forecast-list__header">
+        <h3>{rangeLabel || 'Forecast'}</h3>
+      </div>
       <ul>
         {items.map((item) => (
           <li key={item.date} className="forecast-item">
             <div>
-              <p className="forecast-day">{item.label}</p>
+              <p className="forecast-day">
+                <span role="img" aria-label="conditions">
+                  {emojiForDescription(item.summary)}
+                </span>{' '}
+                {item.label}
+              </p>
               <p className="forecast-summary">{item.summary}</p>
             </div>
-            <p>
+            <p className="forecast-temps">
               <strong>{Math.round(item.high)}°C</strong>
-              <span style={{ marginLeft: '0.35rem', color: '#94a3b8' }}>
-                {Math.round(item.low)}°C
-              </span>
+              <span className="forecast-low">{Math.round(item.low)}°C</span>
             </p>
           </li>
         ))}

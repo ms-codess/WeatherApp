@@ -1,4 +1,7 @@
-﻿'use client';
+'use client';
+
+import Image from 'next/image';
+import { emojiForDescription } from '../lib/weatherEmojis';
 
 export default function WeatherCard({ data }) {
   if (!data) {
@@ -9,17 +12,30 @@ export default function WeatherCard({ data }) {
     );
   }
 
+  const emoji = emojiForDescription(data.description);
+
   return (
     <div className="panel-section weather-card">
       <div className="weather-card__header">
         <div>
           <p className="eyebrow">Current weather</p>
           <h3>{data.location}</h3>
-          <p className="weather-card__summary">{data.description}</p>
+          <p className="weather-card__summary">
+            <span role="img" aria-label="conditions">
+              {emoji}
+            </span>{' '}
+            {data.description}
+          </p>
         </div>
         <div className="weather-card__temperature">
           {data.icon ? (
-            <img src={data.icon} alt={data.description} width={72} height={72} />
+            <Image
+              src={data.icon}
+              alt={data.description}
+              width={72}
+              height={72}
+              unoptimized
+            />
           ) : null}
           <span>{Math.round(data.temperature)}°C</span>
           <small>Feels like {Math.round(data.feelsLike)}°C</small>
@@ -36,7 +52,7 @@ export default function WeatherCard({ data }) {
         </div>
         <div>
           <dt>Visibility</dt>
-          <dd>{data.visibility ?? '—'}</dd>
+          <dd>{data.visibility ?? '-'}</dd>
         </div>
       </dl>
     </div>

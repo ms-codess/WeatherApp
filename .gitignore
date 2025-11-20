@@ -10,3 +10,4 @@ prisma/generated/
 prisma/migrations/
 *.db
 *.db-journal
+.vscode/
