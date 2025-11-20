@@ -6,5 +6,8 @@ build/
 out/
 coverage/
 *.log
-prisma/migrations/
 prisma/generated/
+prisma/migrations/
+*.db
+*.db-journal
+.vscode/

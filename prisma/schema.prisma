@@ -1,33 +1,52 @@
-﻿// Prisma schema for weather-trip-planner
+// Prisma schema for weather-trip-planner
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
 model Trip {
-  id             Int              @id @default(autoincrement())
-  name           String
-  origin         String
-  destination    String
-  startDate      DateTime
-  endDate        DateTime
-  notes          String?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  weatherReports WeatherReport[]
+  id                Int          @id @default(autoincrement())
+  tripName          String
+  locationInput     String
+  normalizedCity    String?
+  normalizedCountry String?
+  latitude          Float?
+  longitude         Float?
+  startDate         DateTime
+  endDate           DateTime
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  weather           TripWeather?
 }
 
-model WeatherReport {
-  id        Int      @id @default(autoincrement())
-  trip      Trip     @relation(fields: [tripId], references: [id])
-  tripId    Int
-  date      DateTime
-  summary   String?
-  details   Json?
-  createdAt DateTime @default(now())
+model TripWeather {
+  id          Int      @id @default(autoincrement())
+  trip        Trip     @relation(fields: [tripId], references: [id])
+  tripId      Int      @unique
+  weatherJson String
+  avgTemp     Float?
+  minTemp     Float?
+  maxTemp     Float?
+  summaryText String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Favorite {
+  id                Int      @id @default(autoincrement())
+  label             String
+  locationInput     String
+  normalizedCity    String?
+  normalizedCountry String?
+  latitude          Float
+  longitude         Float
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([latitude, longitude])
 }

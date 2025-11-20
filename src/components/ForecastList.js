@@ -1,21 +1,39 @@
 'use client';
 
-export default function ForecastList({ items }) {
-  if (!items?.length) {
-    return null;
+import { emojiForDescription } from '../lib/weatherEmojis';
+
+export default function ForecastList({ items, rangeLabel }) {
+  if (!items || !items.length) {
+    return (
+      <section className="panel-section forecast-list">
+        <h3>Forecast preview</h3>
+        <p className="search-hint">
+          Select a destination and date range to view a tailored outlook.
+        </p>
+      </section>
+    );
   }
 
   return (
-    <section style={styles.wrapper}>
-      <h3 style={styles.heading}>5-Day Outlook</h3>
-      <ul style={styles.list}>
-        {items.map((day) => (
-          <li key={day.date} style={styles.item}>
-            <p style={styles.day}>{day.label}</p>
-            <p style={styles.summary}>{day.summary}</p>
-            <p style={styles.temp}>
-              <strong>{Math.round(day.high)}°</strong>
-              <span style={styles.low}>{Math.round(day.low)}°</span>
+    <section className="panel-section forecast-list">
+      <div className="forecast-list__header">
+        <h3>{rangeLabel || 'Forecast'}</h3>
+      </div>
+      <ul>
+        {items.map((item) => (
+          <li key={item.date} className="forecast-item">
+            <div>
+              <p className="forecast-day">
+                <span role="img" aria-label="conditions">
+                  {emojiForDescription(item.summary)}
+                </span>{' '}
+                {item.label}
+              </p>
+              <p className="forecast-summary">{item.summary}</p>
+            </div>
+            <p className="forecast-temps">
+              <strong>{Math.round(item.high)}°C</strong>
+              <span className="forecast-low">{Math.round(item.low)}°C</span>
             </p>
           </li>
         ))}
@@ -23,47 +41,3 @@ export default function ForecastList({ items }) {
     </section>
   );
 }
-
-const styles = {
-  wrapper: {
-    marginTop: '1.5rem',
-    background: '#fff',
-    borderRadius: '12px',
-    padding: '1rem',
-    boxShadow: '0 10px 35px rgba(0,0,0,0.04)',
-  },
-  heading: {
-    marginTop: 0,
-  },
-  list: {
-    listStyle: 'none',
-    margin: 0,
-    padding: 0,
-    display: 'grid',
-    gap: '0.75rem',
-  },
-  item: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '0.75rem 1rem',
-    border: '1px solid #e3e8f4',
-    borderRadius: '10px',
-  },
-  day: {
-    fontWeight: 600,
-  },
-  summary: {
-    flex: 1,
-    textAlign: 'center',
-    color: '#697386',
-  },
-  temp: {
-    display: 'flex',
-    gap: '0.45rem',
-    alignItems: 'baseline',
-  },
-  low: {
-    color: '#8b92a7',
-  },
-};
