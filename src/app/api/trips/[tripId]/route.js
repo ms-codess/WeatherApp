@@ -1,20 +1,27 @@
 import { NextResponse } from 'next/server';
-import { Prisma } from '@prisma/client';
 import prisma from '../../../../lib/db';
 import { validateTripRequest } from '../../../../lib/validation';
 import {
-  geocodeLocation,
   fetchWeather,
+  geocodeLocation,
   summarizeWeather,
 } from '../../../../lib/weatherClient';
 
 function parseId(params) {
-  const value = Number(params?.tripId ?? params?.id);
-  return Number.isInteger(value) && value > 0 ? value : null;
+  const id = Number(params?.tripId ?? params?.id);
+  return Number.isInteger(id) && id > 0 ? id : null;
 }
 
-function toDecimal(value) {
-  return value == null ? null : new Prisma.Decimal(Number(value).toFixed(7));
+function hydrateTrip(trip) {
+  if (!trip) return trip;
+  if (trip.weather?.weatherJson) {
+    try {
+      trip.weather.weatherJson = JSON.parse(trip.weather.weatherJson);
+    } catch {
+      // keep raw string
+    }
+  }
+  return trip;
 }
 
 async function findTrip(id) {
@@ -27,26 +34,26 @@ async function findTrip(id) {
 export async function GET(_request, { params }) {
   const id = parseId(params);
   if (!id) {
-    return NextResponse.json({ error: 'Invalid trip id' }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid trip id.' }, { status: 400 });
   }
 
   const trip = await findTrip(id);
   if (!trip) {
-    return NextResponse.json({ error: 'Trip not found' }, { status: 404 });
+    return NextResponse.json({ error: 'Trip not found.' }, { status: 404 });
   }
 
-  return NextResponse.json(trip);
+  return NextResponse.json(hydrateTrip(trip));
 }
 
 export async function PUT(request, { params }) {
   const id = parseId(params);
   if (!id) {
-    return NextResponse.json({ error: 'Invalid trip id' }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid trip id.' }, { status: 400 });
   }
 
   const existing = await findTrip(id);
   if (!existing) {
-    return NextResponse.json({ error: 'Trip not found' }, { status: 404 });
+    return NextResponse.json({ error: 'Trip not found.' }, { status: 404 });
   }
 
   const payload = await request.json();
@@ -55,50 +62,45 @@ export async function PUT(request, { params }) {
     return NextResponse.json({ errors: validation.errors }, { status: 400 });
   }
 
-  const trimmedLocation = payload.locationInput.trim();
-  const locationChanged = trimmedLocation !== existing.inputLocation;
+  const locationChanged =
+    validation.locationInput !== existing.locationInput?.trim();
   const datesChanged =
     existing.startDate.getTime() !== validation.start.getTime() ||
     existing.endDate.getTime() !== validation.end.getTime();
 
-  let locationData = null;
+  let location = null;
   if (locationChanged) {
-    locationData = await geocodeLocation(trimmedLocation);
+    location = await geocodeLocation(validation.locationInput);
   }
 
-  const needsWeatherRefresh = locationChanged || datesChanged;
+  const shouldRefreshWeather = locationChanged || datesChanged;
   let weatherPayload;
-  if (needsWeatherRefresh) {
-    const lat = locationChanged
-      ? locationData.lat
-      : Number(existing.latitude);
-    const lon = locationChanged
-      ? locationData.lon
-      : Number(existing.longitude);
+  if (shouldRefreshWeather) {
+    const lat = locationChanged ? location.lat : existing.latitude;
+    const lon = locationChanged ? location.lon : existing.longitude;
     weatherPayload = await fetchWeather(lat, lon);
   }
-
   const summary = weatherPayload ? summarizeWeather(weatherPayload) : null;
 
   const data = {
-    tripName: payload.tripName.trim(),
-    inputLocation: trimmedLocation,
+    tripName: validation.name,
+    locationInput: validation.locationInput,
     startDate: validation.start,
     endDate: validation.end,
   };
 
-  if (locationChanged && locationData) {
-    data.normalizedCity = locationData.city;
-    data.normalizedCountry = locationData.country;
-    data.latitude = toDecimal(locationData.lat);
-    data.longitude = toDecimal(locationData.lon);
+  if (locationChanged && location) {
+    data.normalizedCity = location.city;
+    data.normalizedCountry = location.country;
+    data.latitude = location.lat;
+    data.longitude = location.lon;
   }
 
-  if (needsWeatherRefresh && weatherPayload) {
+  if (shouldRefreshWeather && weatherPayload) {
     data.weather = {
       upsert: {
         update: {
-          weatherJson: weatherPayload,
+          weatherJson: JSON.stringify(weatherPayload),
           avgTemp: summary?.avgTemp ?? existing.weather?.avgTemp ?? null,
           minTemp: summary?.minTemp ?? existing.weather?.minTemp ?? null,
           maxTemp: summary?.maxTemp ?? existing.weather?.maxTemp ?? null,
@@ -106,7 +108,7 @@ export async function PUT(request, { params }) {
             summary?.summaryText ?? existing.weather?.summaryText ?? null,
         },
         create: {
-          weatherJson: weatherPayload,
+          weatherJson: JSON.stringify(weatherPayload),
           avgTemp: summary?.avgTemp ?? null,
           minTemp: summary?.minTemp ?? null,
           maxTemp: summary?.maxTemp ?? null,
@@ -116,37 +118,22 @@ export async function PUT(request, { params }) {
     };
   }
 
-  try {
-    const updatedTrip = await prisma.trip.update({
-      where: { id },
-      data,
-      include: { weather: true },
-    });
-    return NextResponse.json(updatedTrip);
-  } catch (error) {
-    console.error('Failed to update trip', error);
-    return NextResponse.json(
-      { error: 'Failed to update trip' },
-      { status: 500 }
-    );
-  }
+  const updated = await prisma.trip.update({
+    where: { id },
+    data,
+    include: { weather: true },
+  });
+
+  return NextResponse.json(hydrateTrip(updated));
 }
 
 export async function DELETE(_request, { params }) {
   const id = parseId(params);
   if (!id) {
-    return NextResponse.json({ error: 'Invalid trip id' }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid trip id.' }, { status: 400 });
   }
 
-  try {
-    await prisma.tripWeather.deleteMany({ where: { tripId: id } });
-    await prisma.trip.delete({ where: { id } });
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Failed to delete trip', error);
-    return NextResponse.json(
-      { error: 'Failed to delete trip' },
-      { status: 500 }
-    );
-  }
+  await prisma.tripWeather.deleteMany({ where: { tripId: id } });
+  await prisma.trip.delete({ where: { id } });
+  return NextResponse.json({ success: true });
 }

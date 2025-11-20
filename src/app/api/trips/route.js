@@ -1,15 +1,22 @@
 import { NextResponse } from 'next/server';
-import { Prisma } from '@prisma/client';
 import prisma from '../../../lib/db';
 import { validateTripRequest } from '../../../lib/validation';
 import {
-  geocodeLocation,
   fetchWeather,
+  geocodeLocation,
   summarizeWeather,
 } from '../../../lib/weatherClient';
 
-function toDecimal(value) {
-  return value == null ? null : new Prisma.Decimal(Number(value).toFixed(7));
+function hydrateTrip(trip) {
+  if (!trip) return trip;
+  if (trip.weather?.weatherJson) {
+    try {
+      trip.weather.weatherJson = JSON.parse(trip.weather.weatherJson);
+    } catch {
+      // keep as-is
+    }
+  }
+  return trip;
 }
 
 export async function GET() {
@@ -19,7 +26,7 @@ export async function GET() {
       select: {
         id: true,
         tripName: true,
-        inputLocation: true,
+        locationInput: true,
         normalizedCity: true,
         normalizedCountry: true,
         latitude: true,
@@ -37,12 +44,11 @@ export async function GET() {
         },
       },
     });
-
     return NextResponse.json(trips);
   } catch (error) {
     console.error('Failed to fetch trips', error);
     return NextResponse.json(
-      { error: 'Failed to load trips' },
+      { error: 'Failed to load trips.' },
       { status: 500 }
     );
   }
@@ -57,23 +63,23 @@ export async function POST(request) {
       return NextResponse.json({ errors: validation.errors }, { status: 400 });
     }
 
-    const location = await geocodeLocation(payload.locationInput);
+    const location = await geocodeLocation(validation.locationInput);
     const weatherPayload = await fetchWeather(location.lat, location.lon);
     const summary = summarizeWeather(weatherPayload);
 
     const trip = await prisma.trip.create({
       data: {
-        tripName: payload.tripName.trim(),
-        inputLocation: payload.locationInput.trim(),
+        tripName: validation.name,
+        locationInput: validation.locationInput,
         normalizedCity: location.city,
         normalizedCountry: location.country,
-        latitude: toDecimal(location.lat),
-        longitude: toDecimal(location.lon),
+        latitude: location.lat,
+        longitude: location.lon,
         startDate: validation.start,
         endDate: validation.end,
         weather: {
           create: {
-            weatherJson: weatherPayload,
+            weatherJson: JSON.stringify(weatherPayload),
             avgTemp: summary.avgTemp,
             minTemp: summary.minTemp,
             maxTemp: summary.maxTemp,
@@ -84,13 +90,12 @@ export async function POST(request) {
       include: { weather: true },
     });
 
-    return NextResponse.json(trip, { status: 201 });
+    return NextResponse.json(hydrateTrip(trip), { status: 201 });
   } catch (error) {
     console.error('Failed to create trip', error);
-    const status = error.message?.includes('location') ? 400 : 500;
     return NextResponse.json(
-      { error: error.message || 'Failed to create trip' },
-      { status }
+      { error: error.message || 'Failed to create trip.' },
+      { status: 500 }
     );
   }
 }
