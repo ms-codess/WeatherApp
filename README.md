@@ -41,6 +41,9 @@ migrations/   → Migration history
 
 ---
 
+Here is the corrected and polished **Setup + Environment Variables** section, with environment variables moved *out* of Setup and clearly separated.
+
+````md
 ## 🚀 Setup
 
 1. Install dependencies  
@@ -48,8 +51,9 @@ migrations/   → Migration history
    npm install
 ````
 
-2. Copy `.env.example` → `.env` and add your OpenWeather API key.
-3. Apply database schema
+2. Copy `.env.example` → `.env`
+
+3. Apply the database schema
 
    ```bash
    npx prisma db push
@@ -60,18 +64,20 @@ migrations/   → Migration history
    ```bash
    npx prisma migrate dev
    ```
-4. Start development server
+
+4. Start the development server
 
    ```bash
    npm run dev
    ```
+
+---
+
 ## 🔑 Environment Variables
 
-- `DATABASE_URL` — defaults to `file:./dev.db`  
-- `OPENWEATHER_API_KEY` — required for weather + geocoding  
-- `SERPAPI_API_KEY` — used for location-based search enhancements (e.g., YouTube results, place details, or auxiliary data via SerpAPI)
+* `DATABASE_URL` — defaults to `file:./dev.db`
+* `OPENWEATHER_API_KEY` — required for weather + geocoding
+* `SERPAPI_API_KEY` — used for enrichment features (YouTube results, place details, and other SerpAPI lookups)
 
 Leaflet uses public OpenStreetMap tiles — **no map token required.**
-
-
 
