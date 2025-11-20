@@ -1,5 +1,6 @@
-﻿'use client';
+'use client';
 
+import Image from 'next/image';
 import { emojiForDescription } from '../lib/weatherEmojis';
 
 export default function WeatherCard({ data }) {
@@ -28,7 +29,13 @@ export default function WeatherCard({ data }) {
         </div>
         <div className="weather-card__temperature">
           {data.icon ? (
-            <img src={data.icon} alt={data.description} width={72} height={72} />
+            <Image
+              src={data.icon}
+              alt={data.description}
+              width={72}
+              height={72}
+              unoptimized
+            />
           ) : null}
           <span>{Math.round(data.temperature)}°C</span>
           <small>Feels like {Math.round(data.feelsLike)}°C</small>
@@ -45,7 +52,7 @@ export default function WeatherCard({ data }) {
         </div>
         <div>
           <dt>Visibility</dt>
-          <dd>{data.visibility ?? '—'}</dd>
+          <dd>{data.visibility ?? '-'}</dd>
         </div>
       </dl>
     </div>

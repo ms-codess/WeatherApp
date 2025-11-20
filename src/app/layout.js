@@ -1,5 +1,6 @@
 ﻿import './globals.css'
 import ThemeToggle from '../components/ThemeToggle'
+import InfoButton from '../components/InfoButton'
 
 export const metadata = {
   title: 'Weather Trip Planner',
@@ -32,9 +33,7 @@ export default function RootLayout({ children }) {
             </div>
             <div className="top-nav__actions">
               <ThemeToggle />
-              <a className="btn btn--primary" href="/">
-                New Search
-              </a>
+              <InfoButton />
             </div>
           </header>
           <main>{children}</main>

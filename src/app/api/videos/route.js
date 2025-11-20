@@ -10,15 +10,20 @@ export async function GET(request) {
 
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('q');
+  const start = searchParams.get('start');
+  const end = searchParams.get('end');
 
   if (!query) {
     return NextResponse.json({ error: 'q parameter is required' }, { status: 400 });
   }
 
+  const descriptor = describeSeason(start, end);
+  const searchTerm = `${query} ${descriptor} tourism`.trim();
+
   const params = new URLSearchParams({
     key: API_KEY,
     part: 'snippet',
-    q: `${query} travel vlog`,
+    q: searchTerm,
     maxResults: '3',
     type: 'video',
     safeSearch: 'moderate',
@@ -40,4 +45,12 @@ export async function GET(request) {
   }));
 
   return NextResponse.json({ videos });
+}
+
+function describeSeason(start, end) {
+  const base = start || end;
+  if (!base) return '';
+  const date = new Date(base);
+  if (Number.isNaN(date)) return '';
+  return date.toLocaleString('en', { month: 'long' });
 }
