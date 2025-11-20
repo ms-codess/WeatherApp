@@ -50,23 +50,34 @@ function describeWeatherCode(code) {
   return WEATHER_CODE_SUMMARY[code] || 'Mixed conditions';
 }
 
-function buildForecast(list = []) {
+function buildForecast(list = [], timezoneOffsetSeconds = 0) {
   const days = new Map();
+  const offsetMs = Number.isFinite(timezoneOffsetSeconds)
+    ? timezoneOffsetSeconds * 1000
+    : 0;
+
   list?.forEach((entry) => {
-    const date = entry?.dt_txt?.split(' ')[0];
-    if (!date) return;
-    const existing = days.get(date) ?? {
+    let dateKey = null;
+    if (typeof entry?.dt === 'number') {
+      const adjusted = new Date((entry.dt * 1000) + offsetMs);
+      dateKey = adjusted.toISOString().split('T')[0];
+    } else if (entry?.dt_txt) {
+      dateKey = entry.dt_txt.split(' ')[0];
+    }
+    if (!dateKey) return;
+    const existing = days.get(dateKey) ?? {
       temps: [],
       summary: entry.weather?.[0]?.description ?? 'n/a',
     };
     existing.temps.push(entry.main?.temp ?? 0);
-    days.set(date, existing);
+    days.set(dateKey, existing);
   });
 
   const formatter = new Intl.DateTimeFormat(undefined, {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
+    timeZone: 'UTC',
   });
 
   return Array.from(days.entries())
@@ -87,6 +98,7 @@ function buildExtendedForecast(daily = {}, limit = 14) {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
+    timeZone: 'UTC',
   });
 
   return daily.time.slice(0, limit).map((date, index) => ({
@@ -100,27 +112,39 @@ function buildExtendedForecast(daily = {}, limit = 14) {
 
 function formatRangeLabel(start, end) {
   if (!start || !end) return '';
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-  if (Number.isNaN(startDate) || Number.isNaN(endDate)) return '';
+  const toUtcDate = (input) => {
+    const [y, m, d] = (input || '').split('-').map(Number);
+    if (!y || !m || !d) return null;
+    return new Date(Date.UTC(y, m - 1, d));
+  };
+  const startDate = toUtcDate(start);
+  const endDate = toUtcDate(end);
+  if (!startDate || !endDate || Number.isNaN(startDate) || Number.isNaN(endDate)) {
+    return '';
+  }
   const formatter = new Intl.DateTimeFormat(undefined, {
     month: 'short',
     day: 'numeric',
+    timeZone: 'UTC',
   });
-  return `${formatter.format(startDate)} – ${formatter.format(endDate)}`;
+  return `${formatter.format(startDate)} - ${formatter.format(endDate)}`;
 }
 
 function filterForecastByRange(items = [], start, end) {
-  if (!start || !end) return items;
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-  if (Number.isNaN(startDate) || Number.isNaN(endDate)) {
-    return items;
-  }
+  const normalize = (value) => {
+    if (!value) return null;
+    const [datePart] = value.split('T');
+    return /^\d{4}-\d{2}-\d{2}$/.test(datePart) ? datePart : null;
+  };
+
+  const startKey = normalize(start);
+  const endKey = normalize(end);
+  if (!startKey || !endKey) return items;
+
   return items.filter((item) => {
-    const current = new Date(item.date);
-    if (Number.isNaN(current)) return true;
-    return current >= startDate && current <= endDate;
+    const currentKey = normalize(item.date);
+    if (!currentKey) return false;
+    return currentKey >= startKey && currentKey <= endKey;
   });
 }
 
@@ -174,6 +198,7 @@ export default function HomePage() {
   const [status, setStatus] = useState({ loading: false, error: '' });
   const [result, setResult] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [tripSaved, setTripSaved] = useState(false);
   const [savingTrip, setSavingTrip] = useState(false);
   const [interpretation, setInterpretation] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
@@ -186,10 +211,10 @@ export default function HomePage() {
   const [datesTouched, setDatesTouched] = useState(false);
 
   const currentWeather = useMemo(() => formatCurrent(result), [result]);
-  const fiveDayForecast = useMemo(
-    () => buildForecast(result?.weather?.forecast?.list ?? []),
-    [result]
-  );
+  const fiveDayForecast = useMemo(() => {
+    const tz = result?.weather?.forecast?.city?.timezone ?? 0;
+    return buildForecast(result?.weather?.forecast?.list ?? [], tz);
+  }, [result]);
   const extendedForecast = useMemo(
     () => buildExtendedForecast(result?.weather?.extended, 14),
     [result]
@@ -267,6 +292,7 @@ export default function HomePage() {
   }
 
   async function lookupWeather(query, interpretationOverride) {
+    setTripSaved(false);
     setStatus({ loading: true, error: '' });
     try {
       const response = await fetch(`/api/weather?query=${encodeURIComponent(query)}`);
@@ -306,6 +332,7 @@ export default function HomePage() {
   }
 
   async function handleSaveTrip(formValues) {
+    setSavingTrip(true);
     try {
       const response = await fetch('/api/trips', {
         method: 'POST',
@@ -316,11 +343,14 @@ export default function HomePage() {
       if (!response.ok) {
         return { errors: data?.errors ?? [data?.error || 'Unable to save trip'] };
       }
+      setTripSaved(true);
       setShowForm(false);
       router.push('/trips');
       return { success: true, reset: true };
     } catch (error) {
       return { errors: [error.message || 'Failed to save trip'] };
+    } finally {
+      setSavingTrip(false);
     }
   }
 
@@ -345,6 +375,7 @@ export default function HomePage() {
     setStatus({ loading: false, error: '' });
     setCacheNotice('');
     setShowingCache(false);
+    setTripSaved(false);
     setTravelDates(suggestedDates());
   }
 
@@ -442,12 +473,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {interpretation ? (
-          <div className="status-badge">
-            Interpreted as {interpretation.label}
-          </div>
-        ) : null}
-
         <SearchBar
           onSearch={(value, meta) => lookupWeather(value, meta)}
           onUseLocation={handleUseLocation}
@@ -522,8 +547,15 @@ export default function HomePage() {
             <button className="btn" onClick={handleResetPlanner}>
               Close planner
             </button>
-            <button className="btn btn--primary" onClick={() => setShowForm((value) => !value)}>
-              {showForm ? 'Hide form' : 'Save this trip'}
+            <button
+              className="btn btn--primary"
+              disabled={savingTrip}
+              onClick={() => {
+                setTripSaved(false);
+                setShowForm(true);
+              }}
+            >
+              {savingTrip ? 'Saving...' : tripSaved ? 'Trip saved' : 'Save this trip'}
             </button>
             <p className="overlay-actions__note">
               Detailed itineraries, videos, and hotel suggestions appear inside each saved trip view.
@@ -550,4 +582,3 @@ export default function HomePage() {
     </section>
   );
 }
-

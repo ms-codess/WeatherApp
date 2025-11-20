@@ -313,8 +313,35 @@ a {
 
 .overlay-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: minmax(220px, 0.9fr) minmax(260px, 1.1fr);
   gap: 1rem;
+  align-items: start;
+}
+
+.overlay-grid .forecast-list {
+  grid-column: 1 / -1;
+}
+
+.overlay-grid .weather-card,
+.overlay-grid .location-card {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .overlay-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .overlay-grid .forecast-list {
+    grid-column: auto;
+  }
+
+  .overlay-grid .weather-card,
+  .overlay-grid .location-card {
+    grid-column: auto;
+    width: auto;
+  }
 }
 
 .overlay-actions {

@@ -23,15 +23,13 @@ export default function LocationDetails({ location, query, interpretation }) {
 
   const details = [
     { label: 'Original search', value: query || '-' },
-   
     {
       label: 'Resolved location',
       value: resolvedLocation || location.label || 'Unknown',
     },
-    { label: 'Postal / ZIP', value: location.postal || '—' },
     {
       label: 'Coordinates',
-      value: latText !== '-' && lonText !== '-' ? `${latText}, ${lonText}` : '—',
+      value: latText !== '-' && lonText !== '-' ? `${latText}, ${lonText}` : 'Not provided',
     },
   ];
 

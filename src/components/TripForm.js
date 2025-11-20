@@ -40,6 +40,7 @@ export default function TripForm({
         setErrors(result.errors);
       } else if (result?.reset) {
         setForm({ ...defaultValues, ...initialValues });
+        setErrors([]);
       }
     } catch (error) {
       setErrors([error.message || 'Failed to save trip']);
@@ -107,7 +108,11 @@ export default function TripForm({
       ) : null}
 
       <div className="trip-form__actions">
-        <button type="submit" className="btn btn--primary" disabled={submitting}>
+        <button
+          type="submit"
+          className="btn btn--primary"
+          disabled={submitting}
+        >
           {submitting ? 'Saving...' : submitLabel}
         </button>
         {onCancel ? (

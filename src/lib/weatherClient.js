@@ -1,3 +1,5 @@
+import { parseCoordinates } from './inputParser';
+
 const BASE_URL =
   process.env.OPENWEATHER_BASE_URL || 'https://api.openweathermap.org';
 
@@ -6,6 +8,8 @@ const OPEN_METEO_BASE_URL = 'https://api.open-meteo.com';
 
 const ZIP_REGEX = /^\d{5}(?:[-\s]\d{4})?$/;
 const POSTAL_REGEX = /^[A-Z]\d[A-Z]\s?\d[A-Z]\d$/i;
+const LANDMARK_KEYWORDS =
+  /(tower|park|museum|bridge|statue|memorial|monument|campus|airport|station|plaza|square|pier|harbor|harbour)/i;
 
 function requireKey() {
   if (!API_KEY) {
@@ -27,13 +31,100 @@ async function fetchJson(url, label) {
 }
 
 function parseCoordinateQuery(input) {
-  if (!input) return null;
-  const match = input.trim().match(
-    /^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/
+  return parseCoordinates(input);
+}
+
+function interpretSearchTerm(search) {
+  return LANDMARK_KEYWORDS.test(search) ? 'Landmark' : 'City/Town';
+}
+
+async function lookupByName(search) {
+  const url = new URL('/geo/1.0/direct', BASE_URL);
+  url.searchParams.set('q', search);
+  url.searchParams.set('limit', '1');
+  url.searchParams.set('appid', API_KEY);
+
+  const results = await fetchJson(
+    url.toString(),
+    'Unable to find that location.'
   );
+
+  if (!results?.length) {
+    return null;
+  }
+
+  const [first] = results;
+  const labelParts = [first.name, first.state, first.country].filter(Boolean);
+  return {
+    lat: first.lat,
+    lon: first.lon,
+    city: first.name,
+    state: first.state,
+    country: first.country,
+    label: labelParts.join(', '),
+    interpretedAs: interpretSearchTerm(search),
+  };
+}
+
+async function lookupLandmarkFallback(search) {
+  const url = new URL('https://geocoding-api.open-meteo.com/v1/search');
+  url.searchParams.set('name', search);
+  url.searchParams.set('count', '1');
+  url.searchParams.set('language', 'en');
+  url.searchParams.set('format', 'json');
+
+  const response = await fetch(url.toString(), {
+    headers: { 'User-Agent': 'weather-trip-planner' },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || 'Alternate geocoding failed.');
+  }
+
+  const payload = await response.json();
+  const match = payload?.results?.[0];
   if (!match) return null;
 
-  return { lat: Number(match[1]), lon: Number(match[2]) };
+  const labelParts = [match.name, match.admin1, match.country].filter(Boolean);
+  return {
+    lat: match.latitude,
+    lon: match.longitude,
+    city: match.name,
+    state: match.admin1,
+    country: match.country,
+    label: labelParts.join(', '),
+    interpretedAs: interpretSearchTerm(search),
+  };
+}
+
+async function tryGeocodeVariants(rawSearch) {
+  const variants = [];
+  const trimmed = rawSearch.trim();
+  variants.push(trimmed);
+
+  if (trimmed.includes(',')) {
+    const firstPart = trimmed.split(',')[0].trim();
+    if (firstPart && firstPart !== trimmed) {
+      variants.push(firstPart);
+    }
+  }
+
+  for (const candidate of variants) {
+    try {
+      const direct = await lookupByName(candidate);
+      if (direct) return direct;
+    } catch {
+      // continue
+    }
+    try {
+      const fallback = await lookupLandmarkFallback(candidate);
+      if (fallback) return fallback;
+    } catch {
+      // continue
+    }
+  }
+  return null;
 }
 
 export async function geocodeLocation(search) {
@@ -58,31 +149,11 @@ export async function geocodeLocation(search) {
     return lookupByZip(search);
   }
 
-  const url = new URL('/geo/1.0/direct', BASE_URL);
-  url.searchParams.set('q', search);
-  url.searchParams.set('limit', '1');
-  url.searchParams.set('appid', API_KEY);
+  const normalizedSearch = typeof search === 'string' ? search.trim() : '';
+  const match = await tryGeocodeVariants(normalizedSearch);
+  if (match) return match;
 
-  const results = await fetchJson(
-    url.toString(),
-    'Unable to find that location.'
-  );
-
-  if (!results?.length) {
-    throw new Error('No matching locations found.');
-  }
-
-  const [first] = results;
-  return {
-    lat: first.lat,
-    lon: first.lon,
-    city: first.name,
-    country: first.country,
-    label: `${first.name}, ${first.country}`,
-    interpretedAs: /tower|park|museum|bridge|statue/i.test(search)
-      ? 'Landmark'
-      : 'City/Town',
-  };
+  throw new Error('No matching locations found.');
 }
 
 async function lookupByZip(zip) {

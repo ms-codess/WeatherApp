@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import prisma from '../../../lib/db';
 import { validateTripRequest } from '../../../lib/validation';
 import {
@@ -17,6 +18,24 @@ function hydrateTrip(trip) {
     }
   }
   return trip;
+}
+
+function handlePrismaError(error, actionLabel = 'request') {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === 'P2021') {
+      return NextResponse.json(
+        {
+          error: 'Database schema is not applied.',
+          hint: 'Run `npx prisma db push` to create tables, then retry.',
+        },
+        { status: 500 }
+      );
+    }
+  }
+  return NextResponse.json(
+    { error: error.message || `Failed to ${actionLabel}.` },
+    { status: 500 }
+  );
 }
 
 export async function GET() {
@@ -47,10 +66,7 @@ export async function GET() {
     return NextResponse.json(trips);
   } catch (error) {
     console.error('Failed to fetch trips', error);
-    return NextResponse.json(
-      { error: 'Failed to load trips.' },
-      { status: 500 }
-    );
+    return handlePrismaError(error, 'load trips');
   }
 }
 
@@ -63,9 +79,30 @@ export async function POST(request) {
       return NextResponse.json({ errors: validation.errors }, { status: 400 });
     }
 
-    const location = await geocodeLocation(validation.locationInput);
-    const weatherPayload = await fetchWeather(location.lat, location.lon);
-    const summary = summarizeWeather(weatherPayload);
+    let location = null;
+    try {
+      location = await geocodeLocation(validation.locationInput);
+    } catch (geoError) {
+      console.warn('Geocode failed, saving without normalized location', geoError);
+      location = {
+        city: null,
+        country: null,
+        lat: null,
+        lon: null,
+        label: validation.locationInput,
+      };
+    }
+
+    let weatherPayload = null;
+    let summary = {};
+    if (location.lat != null && location.lon != null) {
+      try {
+        weatherPayload = await fetchWeather(location.lat, location.lon);
+        summary = summarizeWeather(weatherPayload);
+      } catch (weatherError) {
+        console.warn('Weather fetch failed, saving trip without weather', weatherError);
+      }
+    }
 
     const trip = await prisma.trip.create({
       data: {
@@ -77,15 +114,17 @@ export async function POST(request) {
         longitude: location.lon,
         startDate: validation.start,
         endDate: validation.end,
-        weather: {
-          create: {
-            weatherJson: JSON.stringify(weatherPayload),
-            avgTemp: summary.avgTemp,
-            minTemp: summary.minTemp,
-            maxTemp: summary.maxTemp,
-            summaryText: summary.summaryText,
-          },
-        },
+        weather: weatherPayload
+          ? {
+              create: {
+                weatherJson: JSON.stringify(weatherPayload || {}),
+                avgTemp: summary.avgTemp ?? null,
+                minTemp: summary.minTemp ?? null,
+                maxTemp: summary.maxTemp ?? null,
+                summaryText: summary.summaryText ?? null,
+              },
+            }
+          : undefined,
       },
       include: { weather: true },
     });
@@ -93,9 +132,6 @@ export async function POST(request) {
     return NextResponse.json(hydrateTrip(trip), { status: 201 });
   } catch (error) {
     console.error('Failed to create trip', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to create trip.' },
-      { status: 500 }
-    );
+    return handlePrismaError(error, 'create trip');
   }
 }
