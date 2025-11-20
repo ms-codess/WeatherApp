@@ -1,4 +1,5 @@
- 🌦️ Weather Trip Planner
+<h1 align="center">🌦️ Weather Trip Planner</h1>
+
 
 A full-stack weather exploration tool to help users preview conditions for any destination before choosing travel dates. Search locations, view live forecasts, save trips, and inspect detailed weather summaries — all in a simple map-driven interface.
 
