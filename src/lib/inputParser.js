@@ -64,5 +64,5 @@ export function classifyInput(raw) {
 
 export function getInterpretationLabel(result) {
   if (!result) return '';
-  return `Interpreted as ${result.label}`;
+  return '';
 }

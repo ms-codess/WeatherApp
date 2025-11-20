@@ -1,5 +1,3 @@
-const MAX_RANGE_DAYS = 16;
-
 export function validateLocationInput(locationInput) {
   if (!locationInput || typeof locationInput !== 'string') {
     return { valid: false, error: 'Location is required.' };
@@ -27,14 +25,6 @@ export function validateDateRange(startDate, endDate) {
 
   if (start > end) {
     return { valid: false, error: 'Start date must be before end date.' };
-  }
-
-  const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-  if (days > MAX_RANGE_DAYS) {
-    return {
-      valid: false,
-      error: `Trips cannot exceed ${MAX_RANGE_DAYS} days.`,
-    };
   }
 
   return { valid: true, start, end };

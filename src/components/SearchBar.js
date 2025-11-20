@@ -152,9 +152,7 @@ export default function SearchBar({
           Use my location
         </button>
       </div>
-      {interpretation ? (
-        <p className="search-hint">{getInterpretationLabel(interpretation)}</p>
-      ) : null}
+     
       {error ? (
         <p className="form-error" role="status">
           {error}

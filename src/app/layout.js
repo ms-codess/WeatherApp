@@ -10,7 +10,6 @@ export const metadata = {
 const navigation = [
   { label: 'Home', href: '/' },
   { label: 'Trips', href: '/trips' },
-  { label: 'Favorites', href: '/trips#favorites' },
 ]
 
 export default function RootLayout({ children }) {

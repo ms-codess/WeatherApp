@@ -234,7 +234,6 @@ export default function TripsPage() {
    
       {error ? <p className="form-error">{error}</p> : null}
       {favoriteStatus ? <p className="form-error">{favoriteStatus}</p> : null}
-      {favoriteStatus ? <p className="form-error">{favoriteStatus}</p> : null}
 
       {!loading && nextTrip ? (
         <div className="trip-highlight">
