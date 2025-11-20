@@ -1,39 +1,77 @@
-# weather-trip-planner
+ 🌦️ Weather Trip Planner
 
-## Overview
-Plan routes while checking forecasts for each destination before committing to travel dates.
+A full-stack weather exploration tool to help users preview conditions for any destination before choosing travel dates. Search locations, view live forecasts, save trips, and inspect detailed weather summaries — all in a simple map-driven interface.
 
-## Features
-- Search any location (city, postal code, coordinates, or landmark) and instantly preview current conditions plus a five-day outlook.
-- "Use my location" shortcut powered by the browser Geolocation API.
-- Map-first UI with Leaflet + OpenStreetMap tiles and basic weather icons.
-- Full CRUD for saved trips persisted in SQLite via Prisma; each record stores normalized location metadata and the weather JSON payload.
-- Trip detail views include historical forecast summaries, editing, and deletion controls.
-- CSV/JSON export endpoint for sharing saved trips.
+---
 
-## Tech Stack
-Next.js App Router, React, Prisma, SQLite (file-based dev database), Leaflet/react-leaflet for maps, and OpenWeather APIs for geocoding + weather.
+## ✨ Features
 
-## Architecture
-- `src/app` holds UI routes, nested layouts, and API route handlers
-- `src/components` centralizes shared UI elements (forms, map, cards)
-- `src/lib` exposes Prisma client, weather fetcher, and validation helpers
-- `prisma` directory stores the database schema and migration history
+- 🔍 **Flexible Search** — Find weather by city, postal code, coordinates, or landmark, with instant current conditions and a 5-day outlook.
+- 📍 **Use My Location** — Browser Geolocation API for one-tap weather at your current position.
+- 🗺️ **Map-First UI** — Interactive map built with Leaflet + OpenStreetMap tiles and clean weather icons.
+- 💾 **Full CRUD for Trips** — Store trips in SQLite via Prisma, including normalized location metadata and full weather JSON payloads.
+- 📘 **Trip Detail Pages** — Edit saved trips, review stored forecasts, or delete records.
+- 📤 **Data Export** — Export saved trips as CSV or JSON for sharing or analysis.
 
-## Setup
-1. Install dependencies with `npm install`
-2. Copy `.env.example` to `.env` and add your OpenWeather API key
-3. Run `npx prisma db push` (or `npx prisma migrate dev`) to create/update `dev.db`
-4. Start the dev server with `npm run dev`
+---
 
-## Environment Variables
-`DATABASE_URL` (default `file:./dev.db`) and `OPENWEATHER_API_KEY`.  
-Leaflet uses public OpenStreetMap tiles so no map token is required.
+## 🛠️ Tech Stack
 
-## Scripts
-`npm run dev`, `npm run build`, `npm run start`, `npm run lint`, `npm run prisma:generate`, and `npm run prisma:migrate`.
+- **Frontend:** Next.js App Router, React  
+- **Backend:** Next.js API Routes  
+- **Database:** SQLite (file-based), Prisma ORM  
+- **Weather API:** OpenWeather (geocoding + forecast)  
+- **Maps:** Leaflet / react-leaflet with OpenStreetMap tiles  
 
-## Future Improvements
-- Realtime weather alerts and push notifications
-- Offline caching for trip details and map tiles
-- Collaboration features for sharing trip plans with friends
+---
+
+## 🧱 Architecture
+
+```
+
+src/
+app/          → UI routes, layouts, API handlers
+components/   → Shared UI components (forms, map, cards)
+lib/          → Prisma client, weather fetcher, validation helpers
+prisma/
+schema.prisma → Database schema
+migrations/   → Migration history
+
+````
+
+---
+
+## 🚀 Setup
+
+1. Install dependencies  
+   ```bash
+   npm install
+````
+
+2. Copy `.env.example` → `.env` and add your OpenWeather API key.
+3. Apply database schema
+
+   ```bash
+   npx prisma db push
+   ```
+
+   or
+
+   ```bash
+   npx prisma migrate dev
+   ```
+4. Start development server
+
+   ```bash
+   npm run dev
+   ```
+## 🔑 Environment Variables
+
+- `DATABASE_URL` — defaults to `file:./dev.db`  
+- `OPENWEATHER_API_KEY` — required for weather + geocoding  
+- `SERPAPI_API_KEY` — used for location-based search enhancements (e.g., YouTube results, place details, or auxiliary data via SerpAPI)
+
+Leaflet uses public OpenStreetMap tiles — **no map token required.**
+
+
+
