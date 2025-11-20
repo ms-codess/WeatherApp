@@ -10,7 +10,6 @@ This project is a Next.js 14 application backed by Prisma + SQLite. Install the 
 | `react-dom` | 18.3.1 | DOM-specific React bindings. |
 | `@prisma/client` | 5.15.0 | Prisma ORM client used by API routes. |
 | `prisma` | 5.15.0 | Prisma CLI/schema tooling (needed for `prisma migrate/generate`). |
-| `algoliasearch` | ^5.44.0 | Algolia client placeholder (future search integration). |
 | `fuse.js` | ^7.1.0 | Local fuzzy search for suggestion ranking. |
 | `leaflet` | ^1.9.4 | Map rendering library. |
 | `react-leaflet` | ^4.2.1 | React bindings for Leaflet maps. |
