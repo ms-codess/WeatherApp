@@ -13,7 +13,6 @@ This project is a Next.js 14 application backed by Prisma + SQLite. Install the 
 | `fuse.js` | ^7.1.0 | Local fuzzy search for suggestion ranking. |
 | `leaflet` | ^1.9.4 | Map rendering library. |
 | `react-leaflet` | ^4.2.1 | React bindings for Leaflet maps. |
-| `pdfkit` | ^0.17.2 | Generates itinerary PDFs/exports. |
 
 Install them with:
 ```bash

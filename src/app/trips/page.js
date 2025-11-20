@@ -12,7 +12,6 @@ export default function TripsPage() {
   const [error, setError] = useState('');
   const [formMode, setFormMode] = useState(null);
   const [activeTrip, setActiveTrip] = useState(null);
-  const [favoriteStatus, setFavoriteStatus] = useState('');
   const [tripImages, setTripImages] = useState({});
 
   const fetchTrips = useCallback(async () => {
@@ -109,9 +108,19 @@ export default function TripsPage() {
     setActiveTrip(null);
   }
 
-  function openEditForm(trip) {
+  async function openEditForm(trip) {
+    if (!trip?.id) return;
     setFormMode('edit');
     setActiveTrip(trip);
+    try {
+      const response = await fetch(`/api/trips/${trip.id}`, { cache: 'no-store' });
+      if (response.ok) {
+        const data = await response.json();
+        setActiveTrip(data);
+      }
+    } catch {
+      // keep existing trip data if refresh fails
+    }
   }
 
   async function handleCreate(values) {
@@ -163,36 +172,6 @@ export default function TripsPage() {
     await fetchTrips();
   }
 
-  async function handleFavorite(trip) {
-    if (!trip) return;
-    if (trip.latitude == null || trip.longitude == null) {
-      setFavoriteStatus('Trip is missing coordinates for favorites.');
-      return;
-    }
-    try {
-      setFavoriteStatus('Saving favorite...');
-      const response = await fetch('/api/favorites', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          label: trip.tripName,
-          locationInput: trip.locationInput,
-          normalizedCity: trip.normalizedCity,
-          normalizedCountry: trip.normalizedCountry,
-          latitude: trip.latitude,
-          longitude: trip.longitude,
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data?.error || data?.errors?.[0] || 'Unable to save favorite.');
-      }
-      setFavoriteStatus(`Saved ${data.label} to favorites.`);
-    } catch (err) {
-      setFavoriteStatus(err.message || 'Unable to save favorite.');
-    }
-  }
-
   return (
     <section className="content-panel">
       <div className="trips-hero">
@@ -231,9 +210,8 @@ export default function TripsPage() {
         </div>
       </header>
 
-   
       {error ? <p className="form-error">{error}</p> : null}
-      {favoriteStatus ? <p className="form-error">{favoriteStatus}</p> : null}
+   
 
       {!loading && nextTrip ? (
         <div className="trip-highlight">
@@ -289,9 +267,6 @@ export default function TripsPage() {
                     <Link className="pill-link" href={`/trips/${trip.id}`}>
                       View
                     </Link>
-                    <button className="btn" onClick={() => handleFavorite(trip)}>
-                      Favorite
-                    </button>
                     <button className="btn" onClick={() => openEditForm(trip)}>
                       Edit
                     </button>
@@ -312,7 +287,7 @@ export default function TripsPage() {
         </div>
       ) : null}
 
-      {formMode ? (
+      {formMode && (formMode === 'create' || activeTrip) ? (
         <div className="form-panel">
           <div className="panel-header">
             <strong>{formMode === 'edit' ? 'Edit trip' : 'Create trip'}</strong>
@@ -321,10 +296,16 @@ export default function TripsPage() {
             </button>
           </div>
           <TripForm
-            initialValues=
-              {formMode === 'edit'
-                ? editingValues
-                : { tripName: '', locationInput: '', startDate: '', endDate: '' }}
+            initialValues={
+              formMode === 'edit' && activeTrip
+                ? editingValues || {
+                    tripName: '',
+                    locationInput: '',
+                    startDate: '',
+                    endDate: '',
+                  }
+                : { tripName: '', locationInput: '', startDate: '', endDate: '' }
+            }
             onSubmit={formMode === 'edit' ? handleUpdate : handleCreate}
             submitLabel={formMode === 'edit' ? 'Update Trip' : 'Save Trip'}
             onCancel={() => setFormMode(null)}

@@ -115,11 +115,10 @@ export default function TripDetailPage({ params }) {
               value={exportFormat}
               onChange={(event) => setExportFormat(event.target.value)}
             >
-              <option value="csv">CSV</option>
               <option value="json">JSON</option>
               <option value="xml">XML</option>
+              <option value="csv">CSV (delimited)</option>
               <option value="markdown">Markdown</option>
-              <option value="pdf">PDF</option>
             </select>
             <button
               className="btn"
@@ -137,9 +136,6 @@ export default function TripDetailPage({ params }) {
           <button className="btn" onClick={handleDelete}>
             Delete
           </button>
-          <Link className="btn btn--primary" href="/trips">
-            All trips
-          </Link>
         </div>
       </header>
 

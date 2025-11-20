@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import PDFDocument from 'pdfkit';
 import prisma from '../../../lib/db';
 
 function baseTrip(trip) {
@@ -87,33 +86,13 @@ function toMarkdown(trips) {
   return [header, ...rows].join('\n');
 }
 
-function createPdfBuffer(trips) {
-  return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 40 });
-    const chunks = [];
-
-    doc.on('data', (chunk) => chunks.push(chunk));
-    doc.on('end', () => resolve(Buffer.concat(chunks)));
-    doc.on('error', reject);
-
-    doc.fontSize(18).text('Weather Trip Planner Export', { align: 'center' });
-    doc.moveDown();
-
-    trips.forEach((trip, index) => {
-      doc
-        .fontSize(12)
-        .text(`${index + 1}. ${trip.tripName}`, { underline: true });
-      doc.moveDown(0.2);
-      doc.fontSize(10);
-      doc.text(`Location: ${trip.locationInput}`);
-      doc.text(`City/Country: ${trip.normalizedCity}, ${trip.normalizedCountry}`);
-      doc.text(`Dates: ${trip.startDate} → ${trip.endDate}`);
-      doc.text(`Summary: ${trip.weatherSummary || '—'}`);
-      doc.moveDown();
-    });
-
-    doc.end();
-  });
+function sanitizeFileName(name, fallback = 'trip-export') {
+  const base = String(name || fallback)
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-_]/gi, '');
+  return base || fallback;
 }
 
 export async function GET(request) {
@@ -128,9 +107,17 @@ export async function GET(request) {
   });
 
   const trips = rawTrips.map((trip) => baseTrip(trip));
+  const primaryTripName = tripId && rawTrips[0]?.tripName ? rawTrips[0].tripName : 'trips';
+  const baseFileName = sanitizeFileName(primaryTripName);
 
   if (format === 'json') {
-    return NextResponse.json(rawTrips);
+    const json = JSON.stringify(trips, null, 2);
+    return new NextResponse(json, {
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${baseFileName}.json"`,
+      },
+    });
   }
 
   if (format === 'xml') {
@@ -138,7 +125,7 @@ export async function GET(request) {
     return new NextResponse(xml, {
       headers: {
         'Content-Type': 'application/xml',
-        'Content-Disposition': 'attachment; filename="trips.xml"',
+        'Content-Disposition': `attachment; filename="${baseFileName}.xml"`,
       },
     });
   }
@@ -148,27 +135,17 @@ export async function GET(request) {
     return new NextResponse(markdown, {
       headers: {
         'Content-Type': 'text/markdown; charset=utf-8',
-        'Content-Disposition': 'attachment; filename="trips.md"',
+        'Content-Disposition': `attachment; filename="${baseFileName}.md"`,
       },
     });
   }
 
-  if (format === 'pdf') {
-    const pdfBuffer = await createPdfBuffer(trips);
-    return new NextResponse(pdfBuffer, {
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': 'attachment; filename="trips.pdf"',
-      },
-    });
-  }
-
-  // default CSV
+  // default CSV (comma-delimited)
   const csv = toCsv(trips);
   return new NextResponse(csv, {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': 'attachment; filename="trips.csv"',
+      'Content-Disposition': `attachment; filename="${baseFileName}.csv"`,
     },
   });
 }

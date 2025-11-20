@@ -15,12 +15,13 @@ export default function TripForm({
   submitLabel = 'Save Trip',
   onCancel,
 }) {
-  const [form, setForm] = useState({ ...defaultValues, ...initialValues });
+  const safeInitial = initialValues || {};
+  const [form, setForm] = useState({ ...defaultValues, ...safeInitial });
   const [errors, setErrors] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    setForm({ ...defaultValues, ...initialValues });
+    setForm({ ...defaultValues, ...(initialValues || {}) });
   }, [initialValues]);
 
   function updateField(name, value) {
