@@ -23,7 +23,7 @@ export default function InfoButton() {
                 aria-label="Close about dialog"
                 onClick={() => setOpen(false)}
               >
-                &times;
+                ×
               </button>
               <p className="eyebrow">About This App</p>
               <h3 id="about-title">Weather Trip Planner</h3>
@@ -34,7 +34,7 @@ export default function InfoButton() {
                 Weather Trip Planner helps you explore destinations, align travel dates with real-time
                 forecasts, and save plans for later.
               </p>
-              <h4>🌐 About PM Accelerator</h4>
+              <h4> About PM Accelerator</h4>
               <p>
                 PM Accelerator is a global program dedicated to helping aspiring and early-career Product
                 Managers gain real project experience, improve their product thinking, and build strong
