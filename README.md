@@ -1,7 +1,7 @@
 <h1 align="center">🌦️ Weather Trip Planner</h1>
 
 
-A full-stack weather exploration tool to help users preview conditions for any destination before choosing travel dates. Search locations, view live forecasts, save trips, and inspect detailed weather summaries — all in a simple map-driven interface.
+A full-stack weather exploration tool to help users preview conditions for any destination before choosing travel dates. Search locations, view live forecasts, save trips, and inspect detailed weather summaries, all in a simple map-driven interface.
 
 ---
 
@@ -80,5 +80,4 @@ Here is the corrected and polished **Setup + Environment Variables** section, wi
 * `OPENWEATHER_API_KEY` — required for weather + geocoding
 * `SERPAPI_API_KEY` — used for enrichment features (YouTube results, place details, and other SerpAPI lookups)
 
-Leaflet uses public OpenStreetMap tiles — **no map token required.**
 
